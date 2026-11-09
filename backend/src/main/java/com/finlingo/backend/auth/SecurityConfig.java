@@ -28,15 +28,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults()) // Tells Spring Security to use your CorsConfig bean
+            .cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/companies/**").permitAll()
                 .requestMatchers("/api/terms/**").permitAll()
-                .requestMatchers("/api/ingest/**").permitAll()
-                .requestMatchers("/api/ai/**").permitAll() // <-- Added the AI endpoint here!
+                .requestMatchers("/api/ai/**").permitAll()
+                // Ingestion endpoints are deliberately not public: they trigger
+                // third-party API calls and database writes. They require a valid JWT.
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
