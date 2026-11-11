@@ -8,7 +8,6 @@ import { Search, X, CornerDownLeft, Clock3 } from 'lucide-react'
 export default function SearchCommandBar({
   suggestions = [],
   loading = false,
-  recent = [],
   onQuery,
   onSelect,
 }) {
@@ -53,9 +52,7 @@ export default function SearchCommandBar({
     return () => clearTimeout(timer)
   }, [query, onQuery])
 
-  const items = useMemo(() => {
-    return query.trim() ? suggestions : recent
-  }, [query, suggestions, recent])
+  const items = useMemo(() => suggestions, [suggestions])
 
   const handleSelect = (ticker) => {
     onSelect?.(ticker)
@@ -79,8 +76,20 @@ export default function SearchCommandBar({
             setOpen(true)
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Search company, ticker, sector, or keyword…"
-          className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
+          placeholder="Choose a company or search by name or ticker…"
+          aria-label="Search companies"
+          aria-expanded={open}
+          aria-controls="finlingo-company-options"
+          role="combobox"
+          autoComplete="off"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setOpen(false)
+            if (event.key === 'Enter' && open && items.length > 0) {
+              event.preventDefault()
+              handleSelect(items[0].ticker)
+            }
+          }}
+          className="flex-1 min-w-0 bg-transparent text-sm text-text-primary placeholder:text-slate-600 dark:placeholder:text-slate-300 focus:outline-none"
         />
 
         {query && (
@@ -97,13 +106,13 @@ export default function SearchCommandBar({
           </button>
         )}
 
-        <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border border-border bg-surface text-[11px] font-medium text-text-muted">
+        <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-100 dark:bg-slate-700 text-[11px] font-semibold text-slate-800 dark:text-white">
           ⌘K
         </div>
       </div>
 
       <AnimatePresence>
-        {open && (items.length > 0 || loading) && (
+        {open && (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -112,8 +121,8 @@ export default function SearchCommandBar({
             className="absolute z-40 left-0 right-0 mt-2 rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-xl"
             style={{ background: 'var(--surface)' }}
           >
-            <div className="px-4 py-2 border-b border-border text-[10px] font-bold uppercase tracking-[0.12em] text-text-muted">
-              {query.trim() ? 'Search results' : 'Recent searches'}
+            <div className="px-4 py-2 border-b border-border text-[10px] font-bold uppercase tracking-[0.12em] text-text-secondary">
+              {query.trim() ? `${items.length} matching companies` : `All companies · ${items.length}`}
             </div>
 
             {loading && (
@@ -124,18 +133,21 @@ export default function SearchCommandBar({
             )}
 
             {!loading && items.length === 0 && (
-              <div className="px-4 py-4 text-sm text-text-muted">
-                No matching companies found.
+              <div className="px-4 py-4 text-sm text-text-secondary">
+                {query.trim() ? 'No matching companies found.' : 'Company directory unavailable.'}
               </div>
             )}
 
+            <div id="finlingo-company-options" role="listbox" className="max-h-[380px] overflow-y-auto overscroll-contain">
             {!loading &&
               items.map((item) => (
                 <button
                   key={item.ticker}
                   type="button"
                   onClick={() => handleSelect(item.ticker)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-elevated transition-colors duration-150"
+                  role="option"
+                  aria-selected="false"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none transition-colors duration-150"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary shrink-0">
@@ -144,9 +156,9 @@ export default function SearchCommandBar({
 
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-text-primary truncate">
-                        {item.ticker}
-                        <span className="text-text-muted font-normal">
-                          {' '}· {item.name}
+                        {item.name}
+                        <span className="text-text-secondary font-normal">
+                          {' '}· {item.ticker}
                         </span>
                       </p>
 
@@ -162,6 +174,7 @@ export default function SearchCommandBar({
                   />
                 </button>
               ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

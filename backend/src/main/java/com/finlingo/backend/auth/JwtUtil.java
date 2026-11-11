@@ -1,5 +1,6 @@
 package com.finlingo.backend.auth;
 
+import com.finlingo.backend.user.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -20,15 +21,21 @@ public class JwtUtil {
     private long expirationMs;
 
     private SecretKey key;
+    private final UserRepository users;
+
+    public JwtUtil(UserRepository users) { this.users = users; }
 
     @PostConstruct
     public void init() {
         this.key = Keys.hmacShaKeyFor(secretString.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email) {
+    public String generateToken(String email) { return generateToken(email, 0); }
+
+    public String generateToken(String email, int authVersion) {
         return Jwts.builder()
                 .subject(email)
+                .claim("av", authVersion)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key)
@@ -40,10 +47,20 @@ public class JwtUtil {
                 .parseSignedClaims(token).getPayload().getSubject();
     }
 
+    public int extractAuthVersion(String token) {
+        Object value = Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token).getPayload().get("av");
+        return value instanceof Number ? ((Number) value).intValue() : 0;
+    }
+
     public boolean isTokenValid(String token) {
         try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
-            return true;
+            var claims = Jwts.parser().verifyWith(key).build()
+                    .parseSignedClaims(token).getPayload();
+            Object rawVersion = claims.get("av");
+            int version = rawVersion instanceof Number ? ((Number) rawVersion).intValue() : 0;
+            return users.findByEmail(claims.getSubject())
+                    .map(user -> user.getAuthVersion() == version).orElse(false);
         } catch (Exception e) {
             return false;
         }

@@ -1,244 +1,106 @@
-import { useMemo, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useState } from 'react'
+import { animate, motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { CheckCircle2, MinusCircle, Trophy } from 'lucide-react'
 
-const DEFAULT_BREAKDOWN = [
-  { key: 'growth', label: 'Growth', weight: 30 },
-  { key: 'profitability', label: 'Profitability', weight: 30 },
-  { key: 'valuation', label: 'Valuation', weight: 20 },
-  { key: 'financialHealth', label: 'Financial Health', weight: 20 },
-]
+function AnimatedScore({ value, color }) {
+  const [shown, setShown] = useState(value == null ? '—' : 0)
+  const reducedMotion = useReducedMotion()
+  useEffect(() => {
+    if (value == null) { setShown('—'); return undefined }
+    if (reducedMotion) { setShown(value); return undefined }
+    const controls = animate(0, value, { duration: 0.75, ease: 'easeOut', onUpdate: (number) => setShown(Math.round(number)) })
+    return () => controls.stop()
+  }, [value, reducedMotion])
+  return <motion.div initial={{ opacity: 0, scale: 0.87 }} animate={{ opacity: 1, scale: 1 }}
+    className="mb-3 text-6xl font-bold tabular-nums md:text-7xl" style={{ color: 'var(--text-primary)' }}>{shown}</motion.div>
+}
 
-export default function BattleScore({
-  leftCompany,
-  rightCompany,
-  scoreBreakdown = DEFAULT_BREAKDOWN,
-}) {
-  // ------------------------------------------------------------
-  // Backend-ready score calculation
-  //
-  // Expected future shape:
-  // company.metrics = {
-  //   growth: { score: 92 },
-  //   profitability: { score: 88 },
-  //   valuation: { score: 70 },
-  //   financialHealth: { score: 85 },
-  // }
-  // ------------------------------------------------------------
+const asScore = (company) => {
+  const scored = Object.values(company?.metrics || {}).filter((metric) => typeof metric?.score === 'number')
+  return scored.length ? Math.round(scored.reduce((sum, metric) => sum + metric.score, 0) / scored.length) : null
+}
 
-  const calculateScore = (company) => {
-    const metricValues = Object.values(company?.metrics || {})
-
-    if (metricValues.length === 0) {
-      return 0
-    }
-
-    const total = metricValues.reduce(
-      (sum, metric) => sum + (metric?.score || 0),
-      0
-    )
-
-    return Math.round(total / metricValues.length)
-  }
-
-  // Memoized so it doesn't recalculate on every render
-  const leftScore = useMemo(
-    () => calculateScore(leftCompany),
-    [leftCompany]
-  )
-
-  const rightScore = useMemo(
-    () => calculateScore(rightCompany),
-    [rightCompany]
-  )
-
-  const leader =
-    leftScore > rightScore
-      ? leftCompany?.ticker
-      : rightScore > leftScore
-        ? rightCompany?.ticker
-        : null
-
+export default function BattleScore({ leftCompany, rightCompany, roundDetails = [] }) {
+  const leftScore = useMemo(() => asScore(leftCompany), [leftCompany])
+  const rightScore = useMemo(() => asScore(rightCompany), [rightCompany])
+  const scored = roundDetails.filter((round) => round.scored)
+  const rounds = scored.length
+  const winsLeft = scored.filter((round) => round.winner === 'left').length
+  const winsRight = scored.filter((round) => round.winner === 'right').length
+  const ties = scored.filter((round) => round.winner === 'tie').length
+  const leader = leftScore == null || rightScore == null || leftScore === rightScore ? null
+    : leftScore > rightScore ? leftCompany : rightCompany
   const [showBreakdown, setShowBreakdown] = useState(false)
-
   return (
-    <div
-      className="rounded-2xl border p-8 mb-8"
-      style={{
-        background: 'var(--surface)',
-        borderColor: 'var(--border)',
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="mb-8 rounded-2xl border p-5 sm:p-8" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2
-            className="text-2xl font-bold"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Relative Strength Score
-          </h2>
-
-          <p
-            className="text-sm mt-1"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Composite score based on company fundamentals.
-          </p>
+          <h2 className="text-2xl font-bold text-[color:var(--text-primary)]">Battle Score</h2>
+          <p className="mt-1 text-sm text-[color:var(--text-muted)]">Comparable SEC fundamentals · head-to-head points</p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setShowBreakdown((prev) => !prev)}
-          className="text-sm font-medium transition-colors hover:text-primary"
-          style={{ color: 'var(--text-muted)' }}
-        >
+        <button type="button" onClick={() => setShowBreakdown((current) => !current)}
+          aria-expanded={showBreakdown} className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-semibold text-[color:var(--text-primary)] transition-colors hover:border-primary hover:text-primary">
           {showBreakdown ? 'Hide' : 'Show'} Breakdown
         </button>
       </div>
 
-      {/* Score Display */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mb-6">
-        {/* Left */}
-        <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-6xl md:text-7xl font-bold mb-3"
-            style={{ color: leftCompany?.color }}
-          >
-            {leftScore}
-          </motion.div>
-
-          <div
-            className="w-full h-3 rounded-full overflow-hidden mb-3"
-            style={{ background: 'var(--surface-elevated)' }}
-          >
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${leftScore}%` }}
-              transition={{
-                duration: 1,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="h-full rounded-full"
-              style={{ background: leftCompany?.color }}
-            />
+      <div className="mb-6 grid grid-cols-1 items-center gap-7 md:grid-cols-3">
+        {[[leftCompany, leftScore]].map(([company, score]) => <div key={company.ticker} className="text-center">
+          <AnimatedScore value={score} color={company.color} />
+          <div className="mb-3 h-3 overflow-hidden rounded-full" style={{ background: 'var(--surface-elevated)' }}>
+            <motion.div key={company.ticker} initial={{ width: 0 }} animate={{ width: `${score ?? 0}%` }}
+              transition={{ duration: 0.85, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: company.color }}/>
           </div>
+          <p className="text-lg font-semibold text-[color:var(--text-primary)]">{company.ticker}</p>
+          <p className="text-xs text-[color:var(--text-muted)]">{winsLeft} round{winsLeft === 1 ? '' : 's'} won</p>
+        </div>)}
 
-          <p
-            className="font-semibold text-lg"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {leftCompany?.ticker}
-          </p>
+        <div className="text-center">
+          <AnimatePresence mode="wait">
+            <motion.div key={leader?.ticker || (rounds ? 'tie' : 'limited')}
+              initial={{ scale: 0.75, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
+              <span className="mb-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
+                style={leader ? { background: 'var(--surface-elevated)', border: `1px solid ${leader.color}80`, color: 'var(--text-primary)' }
+                  : { background: 'var(--surface-elevated)', color: 'var(--text-primary)' }}>
+                {leader && <Trophy size={16}/>} {leader ? `${leader.ticker} Leads` : rounds ? 'Draw' : 'No scored rounds'}
+              </span>
+            </motion.div>
+          </AnimatePresence>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--text-muted)]">{rounds}/9 rounds</p>
+          <p className="mt-2 text-xs text-[color:var(--text-muted)]">{rounds ? `${leftCompany.ticker} ${winsLeft} wins · ${ties} tied · ${rightCompany.ticker} ${winsRight} wins` : 'No eligible rounds'}</p>
         </div>
 
-        {/* Center */}
-        <div className="text-center">
-          {leader ? (
-            <div
-              className="inline-block px-4 py-2 rounded-full text-sm font-bold text-white mb-3"
-              style={{
-                background:
-                  leader === leftCompany?.ticker
-                    ? leftCompany?.color
-                    : rightCompany?.color,
-              }}
-            >
-              {leader} Leads
-            </div>
-          ) : (
-            <div
-              className="inline-block px-4 py-2 rounded-full text-sm font-bold mb-3"
-              style={{
-                background: 'var(--surface-elevated)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Tie
-            </div>
-          )}
-
-          <p
-            className="text-xs uppercase tracking-widest font-semibold"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            Composite score
-          </p>
-        </div>
-
-        {/* Right */}
-        <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-6xl md:text-7xl font-bold mb-3"
-            style={{ color: rightCompany?.color }}
-          >
-            {rightScore}
-          </motion.div>
-
-          <div
-            className="w-full h-3 rounded-full overflow-hidden mb-3"
-            style={{ background: 'var(--surface-elevated)' }}
-          >
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${rightScore}%` }}
-              transition={{
-                duration: 1,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="h-full rounded-full"
-              style={{ background: rightCompany?.color }}
-            />
+        {[[rightCompany, rightScore]].map(([company, score]) => <div key={company.ticker} className="text-center">
+          <AnimatedScore value={score} color={company.color} />
+          <div className="mb-3 h-3 overflow-hidden rounded-full" style={{ background: 'var(--surface-elevated)' }}>
+            <motion.div key={company.ticker} initial={{ width: 0 }} animate={{ width: `${score ?? 0}%` }}
+              transition={{ duration: 0.85, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: company.color }}/>
           </div>
-
-          <p
-            className="font-semibold text-lg"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {rightCompany?.ticker}
-          </p>
-        </div>
+          <p className="text-lg font-semibold text-[color:var(--text-primary)]">{company.ticker}</p>
+          <p className="text-xs text-[color:var(--text-muted)]">{winsRight} round{winsRight === 1 ? '' : 's'} won</p>
+        </div>)}
       </div>
 
-      {/* Breakdown */}
-      <AnimatePresence>
-        {showBreakdown && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="pt-6 border-t overflow-hidden"
-            style={{ borderColor: 'var(--border)' }}
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              {scoreBreakdown.map((item) => (
-                <div
-                  key={item.key}
-                  className="rounded-xl p-4"
-                  style={{ background: 'var(--surface-elevated)' }}
-                >
-                  <p
-                    className="text-xs font-semibold uppercase tracking-wide mb-2"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {item.label}
-                  </p>
-
-                  <p
-                    className="font-bold text-lg"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
-                    {item.weight}%
-                  </p>
+      <AnimatePresence initial={false}>
+        {showBreakdown && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }} className="overflow-hidden border-t border-[var(--border)]">
+          <div className="space-y-2 pt-6">
+            <p className="mb-3 text-sm font-semibold text-[color:var(--text-primary)]">Round-by-round results</p>
+            {roundDetails.map((round) => {
+              const winner = round.winner === 'left' ? leftCompany : round.winner === 'right' ? rightCompany : null
+              return <div key={round.name} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[var(--surface-elevated)] px-4 py-3 text-sm">
+                <div className="flex min-w-0 items-center gap-2">
+                  {round.scored ? <CheckCircle2 size={15} style={{ color: winner?.color || 'var(--text-muted)' }} /> : <MinusCircle size={15} className="text-[color:var(--text-muted)]" />}
+                  <span className="font-medium text-[color:var(--text-primary)]">{round.name}</span>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+                <div className="text-right text-xs sm:text-sm" style={{ color: winner?.color || 'var(--text-muted)' }}>
+                  {round.scored ? <>{round.left} vs {round.right} · {winner ? `${winner.ticker} wins` : 'Tie'}</>
+                    : `Excluded · ${round.reason}`}
+                </div>
+              </div>
+            })}
+          </div>
+        </motion.div>}
       </AnimatePresence>
     </div>
   )

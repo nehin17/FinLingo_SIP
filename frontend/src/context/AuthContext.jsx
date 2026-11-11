@@ -123,6 +123,19 @@ import {
       setUser(null)
     }, [])
   
+    // Fetch a new server-owned profile after changing email or display name.
+    const refreshUser = useCallback(async () => {
+      const currentUser = await authService.getCurrentUser()
+      setUser(currentUser)
+      return currentUser
+    }, [])
+
+    useEffect(() => {
+      const syncAvatar = () => { refreshUser().catch(() => {}) }
+      window.addEventListener('finlingo:avatar-updated', syncAvatar)
+      return () => window.removeEventListener('finlingo:avatar-updated', syncAvatar)
+    }, [refreshUser])
+
     // ==========================================================
     // CONTEXT VALUE
     // ==========================================================
@@ -137,6 +150,7 @@ import {
       signup,
       signin,
       logout,
+      refreshUser,
     }
   
     return (

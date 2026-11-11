@@ -22,6 +22,22 @@ public class Company {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    // Curated company facts are nullable until a reviewed source is available.
+    @Column(name = "founded_year")
+    private Integer foundedYear;
+
+    @Column(name = "headquarters", length = 180)
+    private String headquarters;
+
+    @Column(length = 500, name = "description_source_url")
+    private String descriptionSourceUrl;
+
+    @Column(length = 100, name = "description_source_name")
+    private String descriptionSourceName;
+
+    @Column(name = "description_updated_at")
+    private LocalDateTime descriptionUpdatedAt;
+
     @Column(length = 100)
     private String exchange;
 
@@ -53,7 +69,17 @@ public class Company {
     public void setName(String name) { this.name = name; }
     public String getSector() { return sector; }
     public void setSector(String sector) { this.sector = sector; }
+    public Integer getFoundedYear() { return foundedYear; }
+    public void setFoundedYear(Integer foundedYear) { this.foundedYear = foundedYear; }
+    public String getHeadquarters() { return headquarters; }
+    public void setHeadquarters(String headquarters) { this.headquarters = headquarters; }
     public String getDescription() { return description; }
+    public String getDescriptionSourceUrl() { return descriptionSourceUrl; }
+    public void setDescriptionSourceUrl(String url) { this.descriptionSourceUrl = url; }
+    public String getDescriptionSourceName() { return descriptionSourceName; }
+    public void setDescriptionSourceName(String source) { this.descriptionSourceName = source; }
+    public LocalDateTime getDescriptionUpdatedAt() { return descriptionUpdatedAt; }
+    public void setDescriptionUpdatedAt(LocalDateTime date) { this.descriptionUpdatedAt = date; }
     public void setDescription(String description) { this.description = description; }
     public String getExchange() { return exchange; }
     public void setExchange(String exchange) { this.exchange = exchange; }

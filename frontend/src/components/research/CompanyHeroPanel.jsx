@@ -32,22 +32,20 @@ export default function CompanyHeroPanel({
   loading = false,
   onWatch,
   isWatched = false,
+  watchBusy = false,
 }) {
-  if (loading || !company) return <Skeleton />
+  if (loading) return <Skeleton />
+  if (!company) return <section className="rounded-3xl border border-border p-6 text-sm text-text-muted">Choose a company to view its research profile.</section>
 
   const positive = (company.change ?? 0) >= 0
+  const hasChange = Number.isFinite(company.change) && Number.isFinite(company.changeAmount)
   const Arrow = positive ? TrendingUp : TrendingDown
 
   const changeTone = positive
-    ? 'text-emerald-600 dark:text-emerald-400'
+    ? 'text-text-secondary'
     : 'text-red-600 dark:text-red-400'
 
-  const updatedTime = company?.status?.updated
-    ? new Date(company.status.updated).toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit',
-      })
-    : 'Recently'
+  const updatedDate = company?.status?.updated || 'Unavailable'
 
   return (
     <motion.section
@@ -111,42 +109,37 @@ export default function CompanyHeroPanel({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-3xl sm:text-4xl font-bold text-text-primary tabular-nums leading-none">
-              ${company.price?.toFixed(2) ?? '0.00'}
+              {company.price == null ? 'Price unavailable' : `$${Number(company.price).toFixed(2)}`}
             </p>
 
-            <div className={`flex items-center gap-1.5 mt-2 text-sm font-semibold ${changeTone}`}>
-              <Arrow size={15} />
-
-              <span className="tabular-nums">
-                {positive ? '+' : ''}
-                {company.changeAmount?.toFixed(2) ?? '0.00'}
-              </span>
-
-              <span className="tabular-nums">
-                ({positive ? '+' : ''}
-                {company.change?.toFixed(2) ?? '0.00'}%)
-              </span>
-            </div>
+            {hasChange && (
+              <div className={`flex items-center gap-1.5 mt-2 text-sm font-semibold ${changeTone}`}>
+                <Arrow size={15} />
+                <span className="tabular-nums">{positive ? '+' : ''}{company.changeAmount.toFixed(2)}</span>
+                <span className="tabular-nums">({positive ? '+' : ''}{company.change.toFixed(2)}%)</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3 flex-wrap sm:justify-end">
             <div className="text-right">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-500 bg-slate-100 dark:bg-slate-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
 
-                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  {company?.status?.label || 'Market Open'}
+                <span className="text-[11px] font-semibold text-slate-800 dark:text-white">
+                  Historical close
                 </span>
               </div>
 
               <p className="text-[11px] text-text-muted mt-1.5">
-                Updated · {updatedTime}
+                Price as of {updatedDate}
               </p>
             </div>
 
             <button
               type="button"
               onClick={onWatch}
+              disabled={watchBusy}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm ${
                 isWatched
                   ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20'
@@ -154,7 +147,7 @@ export default function CompanyHeroPanel({
               }`}
             >
               <Star size={14} className={isWatched ? 'fill-current' : ''} />
-              {isWatched ? 'Watching' : 'Add to Watchlist'}
+              {watchBusy ? 'Saving…' : isWatched ? 'Saved to Watchlist' : 'Add to Watchlist'}
             </button>
           </div>
         </div>

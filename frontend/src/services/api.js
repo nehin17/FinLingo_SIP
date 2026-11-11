@@ -31,7 +31,9 @@ async function apiRequest(endpoint, options = {}) {
       message = error.message || message
     } catch {}
 
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   
@@ -61,6 +63,9 @@ export const api = {
 
     getByTicker: (ticker) =>
       apiRequest(`/companies/${ticker}`),
+
+    getNews: (ticker) =>
+      apiRequest(`/companies/${encodeURIComponent(ticker)}/news`),
 
     search: (query) =>
         apiRequest(`/companies/search?q=${encodeURIComponent(query)}`),

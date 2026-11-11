@@ -15,6 +15,7 @@ async function signup(userData = {}) {
     email: response.email,
     displayName: response.displayName,
     difficultyLevel: response.difficultyLevel,
+    profilePicture: response.profilePicture || null,
   }
 }
 
@@ -36,6 +37,7 @@ async function signin(email, password) {
     email: response.email,
     displayName: response.displayName,
     difficultyLevel: response.difficultyLevel,
+    profilePicture: response.profilePicture || null,
   }
 }
 

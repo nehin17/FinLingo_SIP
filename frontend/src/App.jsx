@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from './context/AuthContext.jsx'
 import { api } from './services/api.js'
@@ -12,6 +12,9 @@ import Privacy from './components/pages/Privacy.jsx'
 import Terms from './components/pages/Terms.jsx'
 import Markets from './components/pages/Markets.jsx'
 import Profile from './components/pages/Profile.jsx'
+import AccountSettings from './components/pages/AccountSettings.jsx'
+import LearningProgressPage from './components/pages/LearningProgressPage.jsx'
+import { accountSettingsService } from './services/accountSettingsService.js'
 
 import SignInModal from './components/auth/SignInModal.jsx'
 import SignUpModal from './components/auth/SignUpModal.jsx'
@@ -37,14 +40,30 @@ function AppRoutes() {
   // THEME
   // =========================================================
 
-  const [theme, setTheme] = useState(() =>
-    localStorage.getItem('theme') || 'light'
-  )
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
+  const [systemDark, setSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const activeTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const update = () => setSystemDark(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', activeTheme === 'dark')
     localStorage.setItem('theme', theme)
-  }, [theme])
+  }, [theme, activeTheme])
+
+  // Sync a signed-in user's theme across devices; keep the local choice for guests.
+  useEffect(() => {
+    if (!isAuthenticated) return undefined
+    let mounted = true
+    accountSettingsService.get().then((data) => {
+      if (mounted && ['light', 'dark', 'system'].includes(data?.themePreference)) setTheme(data.themePreference)
+    }).catch(() => {}) // Other pages remain functional if account services are offline.
+    return () => { mounted = false }
+  }, [isAuthenticated, user?.email])
 
   // =========================================================
   // MARKETS DATA FROM BACKEND
@@ -205,8 +224,8 @@ function AppRoutes() {
     const routes = {
       profile: '/profile',
       watchlist: '/watchlist',
-      progress: '/learn',
-      settings: '/profile',
+      progress: '/progress',
+      settings: '/settings',
     }
 
     const path = routes[id]
@@ -221,10 +240,18 @@ function AppRoutes() {
   const authProps = {
     isAuthenticated,
     user,
-    theme,
+    theme: activeTheme,
+    themePreference: theme,
+    onThemeChange: setTheme,
 
     onThemeToggle: () => {
-      setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+      const previous = theme
+      const next = activeTheme === 'dark' ? 'light' : 'dark'
+      setTheme(next)
+      if (isAuthenticated) accountSettingsService.updateAppearance(next).catch((error) => {
+        console.error('Could not sync appearance preference:', error)
+        setTheme(previous)
+      })
     },
 
     onSignInClick: () => setShowSignIn(true),
@@ -322,6 +349,11 @@ function AppRoutes() {
         />
 
         <Route
+          path="/progress"
+          element={isAuthenticated ? <LearningProgressPage {...authProps} /> : <Navigate to="/" replace />}
+        />
+
+        <Route
           path="/watchlist"
           element={
             <Watchlist
@@ -329,6 +361,15 @@ function AppRoutes() {
               navbarProps={navbarProps}
               sidebarProps={sidebarProps}
             />
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            isAuthenticated ? (
+              <AccountSettings {...authProps} navbarProps={navbarProps} sidebarProps={sidebarProps} />
+            ) : <Navigate to="/" replace />
           }
         />
 

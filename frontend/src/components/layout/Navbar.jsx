@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 
 import SearchBar from '../shared/SearchBar.jsx'
+import { learningService } from '../../services/learningService.js'
 
 const navLinks = [
   { label: 'Markets', href: '/markets' },
@@ -40,6 +41,22 @@ function getInitials(name) {
     .join('')
 }
 
+// A calendar day counts only when a signed-in learner completes a lesson
+// or submits a practice question. Numbers always come from /api/learn/streak.
+const EMPTY_STREAK = { currentStreak: 0, bestStreak: 0, lastActiveDate: null, todayCompleted: false }
+
+function readableActivityDate(isoDate) {
+  if (!isoDate) return 'No activity yet'
+  const local = new Date(`${isoDate}T12:00:00`)
+  if (Number.isNaN(local.valueOf())) return '—'
+  const today = new Date()
+  const dayKey = (date) => [date.getFullYear(), date.getMonth(), date.getDate()].join('-')
+  if (dayKey(today) === dayKey(local)) return 'Today'
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 12)
+  if (dayKey(yesterday) === dayKey(local)) return 'Yesterday'
+  return local.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 // ============================================================
 // STREAK BUTTON
 // ============================================================
@@ -47,8 +64,10 @@ function getInitials(name) {
 function StreakButton({
   isAuthenticated,
   streak,
+  streakStatus,
   onSignInClick,
   onSignUpClick,
+  onRetryStreak,
   compact = false,
 }) {
   const [open, setOpen] = useState(false)
@@ -84,14 +103,16 @@ function StreakButton({
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
-  const encouragement =
-    streak.currentStreak >= 30
+  const hasData = isAuthenticated && streakStatus === 'ready'
+  const encouragement = !hasData
+    ? 'Learning activity is not available yet'
+    : streak.currentStreak >= 30
       ? 'Elite consistency'
       : streak.currentStreak >= 10
         ? "You're on fire"
         : streak.currentStreak >= 5
           ? "You're on a great run"
-          : 'Keep it going'
+          : streak.currentStreak > 0 ? 'Keep it going' : 'Begin with one lesson or practice question'
 
   return (
     <div
@@ -106,7 +127,7 @@ function StreakButton({
         aria-expanded={open}
         aria-label={
           isAuthenticated
-            ? `${streak.currentStreak} day streak — view details`
+            ? hasData ? `${streak.currentStreak} day streak — view details` : 'Learning streak unavailable — view details'
             : 'Streak — sign in to start tracking'
         }
         className={`flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 ${
@@ -130,7 +151,7 @@ function StreakButton({
           <Flame size={20} style={{ color: '#FB923C' }} />
         </div>
 
-        {!compact && isAuthenticated && (
+        {!compact && hasData && (
           <span
             className="text-sm font-bold whitespace-nowrap"
             style={{ color: '#FB923C' }}
@@ -156,7 +177,21 @@ function StreakButton({
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.12)',
             }}
           >
-            {isAuthenticated ? (
+            {isAuthenticated ? !hasData ? (
+              <div className="space-y-3">
+                <p className="text-base font-bold" style={{ color: 'var(--text)' }}>
+                  {streakStatus === 'loading' ? 'Loading your activity…' : 'Streak unavailable'}
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  {streakStatus === 'loading'
+                    ? 'Checking your completed lessons and practice history.'
+                    : 'FINLINGO could not confirm your learning activity. No streak is shown until the service responds.'}
+                </p>
+                {streakStatus === 'error' && <button type="button" onClick={() => { setOpen(false); onRetryStreak?.() }}
+                  className="rounded-lg border px-4 py-2 text-sm font-semibold"
+                  style={{ borderColor: 'var(--border)', color: 'var(--text)' }}>Retry</button>}
+              </div>
+            ) : (
               <>
                 <div className="flex items-center gap-3.5 mb-4">
                   <div
@@ -171,7 +206,7 @@ function StreakButton({
                       className="text-base font-bold leading-snug"
                       style={{ color: 'var(--text)' }}
                     >
-                      {streak.currentStreak}-day streak
+                      {streak.currentStreak === 0 ? 'No active streak yet' : streak.currentStreak === 1 ? '1-day streak' : `${streak.currentStreak}-day streak`}
                     </p>
 
                     <p
@@ -189,7 +224,7 @@ function StreakButton({
                 >
                   <div className="flex items-center justify-between text-sm">
                     <span style={{ color: 'var(--text-muted)' }}>
-                      Today's lesson
+                      Today's learning
                     </span>
 
                     <span
@@ -200,7 +235,7 @@ function StreakButton({
                           : 'var(--text-muted)',
                       }}
                     >
-                      {streak.todayCompleted ? '✓ Done' : 'Pending'}
+                      {streak.todayCompleted ? '✓ Done' : 'Not yet'}
                     </span>
                   </div>
 
@@ -213,7 +248,7 @@ function StreakButton({
                       className="font-semibold"
                       style={{ color: 'var(--text)' }}
                     >
-                      {streak.lastActiveDate}
+                      {readableActivityDate(streak.lastActiveDate)}
                     </span>
                   </div>
 
@@ -229,6 +264,9 @@ function StreakButton({
                       {streak.bestStreak} days
                     </span>
                   </div>
+                  <p className="mt-4 text-[11px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    Complete a lesson or submit a practice answer to count today. Opening pages alone does not count.
+                  </p>
                 </div>
               </>
             ) : (
@@ -253,8 +291,7 @@ function StreakButton({
                       className="text-sm leading-relaxed"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      Track daily finance lessons, market research sessions,
-                      and investing concepts.
+                      Complete lessons or answer practice questions to build a genuine daily learning streak.
                     </p>
                   </div>
                 </div>
@@ -311,17 +348,44 @@ export default function Navbar({
   theme = 'light',
   onThemeToggle,
   onSidebarToggle,
-  streak = {
-    currentStreak: 7,
-    bestStreak: 12,
-    lastActiveDate: 'Today',
-    todayCompleted: true,
-  },
 }) {
   const [scrolled, setScrolled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [streakState, setStreakState] = useState({ status: 'loading', data: null })
+  const [streakReload, setStreakReload] = useState(0)
 
+  // The navbar appears on every page, so it loads the real account streak itself.
+  // Every successful completion / practice submission triggers an immediate refresh.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreakState({ status: 'guest', data: null })
+      return undefined
+    }
+    let cancelled = false
+    const reload = async () => {
+      try {
+        const data = await learningService.streak()
+        if (!cancelled) setStreakState({ status: 'ready', data })
+      } catch {
+        if (!cancelled) setStreakState({ status: 'error', data: null })
+      }
+    }
+    setStreakState({ status: 'loading', data: null })
+    reload()
+    const refreshIfVisible = () => { if (document.visibilityState === 'visible') reload() }
+    window.addEventListener('finlingo:learning-activity', reload)
+    window.addEventListener('focus', reload)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    return () => {
+      cancelled = true
+      window.removeEventListener('finlingo:learning-activity', reload)
+      window.removeEventListener('focus', reload)
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+    }
+  }, [isAuthenticated, user?.email, streakReload])
+
+  const streak = streakState.data || EMPTY_STREAK
   const location = useLocation()
 
   useEffect(() => {
@@ -456,6 +520,8 @@ export default function Navbar({
             <StreakButton
               isAuthenticated={isAuthenticated}
               streak={streak}
+              streakStatus={streakState.status}
+              onRetryStreak={() => setStreakReload((value) => value + 1)}
               onSignInClick={onSignInClick}
               onSignUpClick={onSignUpClick}
             />
@@ -479,7 +545,7 @@ export default function Navbar({
                     {user?.profilePicture ? (
                       <img
                         src={user.profilePicture}
-                        alt={user.name || 'Profile'}
+                        alt={user.displayName || user.name || 'Profile'}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -487,7 +553,7 @@ export default function Navbar({
                         className="text-sm font-bold leading-none select-none"
                         style={{ color: 'var(--primary)' }}
                       >
-                        {getInitials(user?.name)}
+                        {getInitials(user?.displayName || user?.name)}
                       </span>
                     )}
                   </div>
@@ -496,7 +562,7 @@ export default function Navbar({
                     className="text-base font-semibold truncate max-w-[140px]"
                     style={{ color: 'var(--text)' }}
                   >
-                    {user?.name || 'Account'}
+                    {user?.displayName || user?.name || 'Account'}
                   </span>
 
                   <ChevronDown
@@ -527,7 +593,7 @@ export default function Navbar({
                           className="text-sm font-semibold truncate"
                           style={{ color: 'var(--text)' }}
                         >
-                          {user?.name || 'Account'}
+                          {user?.displayName || user?.name || 'Account'}
                         </p>
 
                         {user?.email && (
@@ -586,6 +652,8 @@ export default function Navbar({
               compact
               isAuthenticated={isAuthenticated}
               streak={streak}
+              streakStatus={streakState.status}
+              onRetryStreak={() => setStreakReload((value) => value + 1)}
               onSignInClick={onSignInClick}
               onSignUpClick={onSignUpClick}
             />

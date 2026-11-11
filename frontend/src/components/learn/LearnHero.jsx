@@ -1,148 +1,28 @@
-// src/components/learn/LearnHero.jsx
 import { motion } from 'framer-motion'
-import AccountGateCard from './AccountGateCard'
+import { BookOpen, ArrowRight, ShieldCheck } from 'lucide-react'
 
-/* Small presentational stat used in the authenticated hero strip */
-function HeroStat({ label, value, caption }) {
+export default function LearnHero({ isAuthenticated, progress, onSignInClick, onSignUpClick, onContinue, onExplore }) {
   return (
-    <div>
-      <p className="text-sm text-text-muted mb-1">
-        {label}
+    <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      className="mb-9 rounded-3xl border border-border p-6 sm:p-9" style={{ background: 'var(--surface)' }}>
+      <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] text-primary"><BookOpen size={15} /> FinLingo Academy</p>
+      <h1 className="mb-3 text-3xl font-extrabold tracking-tight text-text-primary sm:text-4xl">{isAuthenticated ? 'Your Learning Hub' : 'Learn Hub'}</h1>
+      <p className="max-w-3xl text-base leading-relaxed text-text-secondary">
+        Learn how to read financial statements, assess cash flow and business quality, and build a defensible valuation. Study in a recommended order, then apply each concept to real company filings.
       </p>
-
-      <p className="text-2xl font-bold text-text-primary">
-        {value}
-      </p>
-
-      {caption && (
-        <p className="text-xs text-text-muted mt-0.5">
-          {caption}
-        </p>
-      )}
-    </div>
-  )
-}
-
-export default function LearnHero({
-  progress,
-  isAuthenticated,
-  onSignInClick,
-  onSignUpClick,
-}) {
- 
-
-  const scrollToPaths = () => {
-    document
-      .getElementById('learning-paths')
-      ?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl p-8 md:p-12 mb-16 border border-border"
-      style={{ background: 'var(--surface)' }}
-    >
-      <h1 className="text-4xl font-bold text-text-primary mb-4">
-        Learn Hub
-      </h1>
-
-      <p className="text-xl text-text-secondary leading-relaxed mb-3">
-        Master financial analysis like an equity research analyst. Learn valuation,
-        profitability, cash flow analysis, financial statement interpretation, and
-        investment research through structured lessons, real company examples, and
-        interactive exercises.
-      </p>
-
-      <p className="text-base text-text-muted mb-8 italic">
-        Used by aspiring equity researchers, finance students, and long-term investors
-        to build practical financial analysis skills.
-      </p>
-
-      {isAuthenticated && progress ? (
-        <>
-          {/* PERSONAL SUMMARY STRIP */}
-          <div
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 p-6 rounded-xl"
-            style={{ background: 'var(--surface-elevated)' }}
-          >
-            <HeroStat
-              label="Progress"
-              value={`${progress.overallPercent}%`}
-              caption="Complete"
-            />
-
-            <HeroStat
-              label="Streak"
-              value={progress.streakDays}
-              caption={progress.streakDays === 1 ? 'Day' : 'Days'}
-            />
-
-            <HeroStat
-              label="Current Level"
-              value={progress.currentLevel}
-            />
-
-            <HeroStat
-              label="Next Level"
-              value={progress.nextLevel}
-            />
-          </div>
-
-          <div className="flex gap-4 flex-wrap">
-            <button
-              onClick={scrollToPaths}
-              className="px-6 py-3 rounded-lg bg-primary text-white font-semibold
-                         hover:bg-primary/90 transition-all text-base"
-            >
-              Continue Learning
-            </button>
-
-            <button
-              onClick={scrollToPaths}
-              className="px-6 py-3 rounded-lg border border-primary text-primary
-                         font-semibold hover:bg-primary/10 transition-all text-base"
-            >
-              Explore the Research Curriculum
-            </button>
-          </div>
-
-          {progress.nextLesson && (
-            <p className="text-sm text-text-muted mt-4">
-              Up next:{' '}
-              <span className="text-text-primary font-semibold">
-                {progress.nextLesson.lessonName}
-              </span>{' '}
-              in {progress.nextLesson.pathName}
-            </p>
-          )}
-        </>
-      ) : (
-        <>
-          {/* ACCOUNT CTA */}
-          <div className="mb-8">
-            <AccountGateCard
-              variant="inline"
-              title="Save Your Learning Progress"
-              description="Sign in to keep your lessons, streak, and skill level synced."
-              onSignInClick={onSignInClick}
-              onSignUpClick={onSignUpClick}
-            />
-          </div>
-
-          <button
-            onClick={scrollToPaths}
-            className="px-6 py-3 rounded-lg border border-primary text-primary
-                       font-semibold hover:bg-primary/10 transition-all text-base"
-          >
-            Explore the Research Curriculum
-          </button>
-        </>
-      )}
-    </motion.div>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button type="button" onClick={isAuthenticated && progress?.nextLesson ? onContinue : onExplore}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">
+          {isAuthenticated && progress?.nextLesson ? 'Continue Your Course' : 'Start the Study Plan'} <ArrowRight size={16} />
+        </button>
+        {isAuthenticated && progress?.nextLesson && <button type="button" onClick={onExplore} className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-primary hover:border-primary">Browse All Lessons</button>}
+      </div>
+      {!isAuthenticated && <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-border pt-5">
+        <ShieldCheck size={19} className="text-primary" />
+        <p className="min-w-[180px] flex-1 text-sm text-text-secondary">Every lesson is free to study. Sign in only to sync completions, practice results and your learning streak.</p>
+        <button type="button" onClick={onSignInClick} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text-primary hover:border-primary">Sign In</button>
+        <button type="button" onClick={onSignUpClick} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90">Create Account</button>
+      </div>}
+    </motion.section>
   )
 }

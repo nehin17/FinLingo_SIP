@@ -1,0 +1,30 @@
+/* Growth artwork only. This sheet deliberately does not change the Profile grid/layout. */
+.pg-growth-card { overflow:hidden; }
+.pg-growth-heading { margin-bottom:15px; }
+.pg-growth-heading h2 { font-size:17px; margin:6px 0 5px; letter-spacing:-.025em; }
+.pg-growth-heading p { line-height:1.5; max-width:260px; }
+.pg-growth-illustration { width:100%; border-radius:18px; overflow:hidden; border:1px solid rgba(180,169,145,.33); box-shadow:0 11px 25px rgba(61,51,38,.075); }
+.pg-growth-illustration.pg-growth-atlas { border-color:rgba(101,90,135,.36); box-shadow:0 11px 24px rgba(43,35,77,.12); }
+.pg-growth-artwork { display:block; width:100%; height:auto; aspect-ratio:480 / 410; }
+.pg-growth-stage-row { display:flex; align-items:start; justify-content:space-between; gap:12px; margin:17px 2px 12px; }
+.pg-growth-stage-row > div:first-child { min-width:0; }
+.pg-growth-kicker { display:block; color:var(--text-muted); font-size:10px; font-weight:800; letter-spacing:.15em; margin-bottom:6px; }
+.pg-growth-stage-row strong { display:block; font-size:17px; font-weight:800; letter-spacing:-.025em; line-height:1.3; color:var(--text); }
+.pg-growth-stage-row p { color:var(--text-muted); font-size:11px; line-height:1.6; margin-top:5px; }
+.pg-growth-fraction { text-align:right; flex-shrink:0; }
+.pg-growth-fraction strong { font-size:22px; letter-spacing:-.045em; line-height:1.2; }
+.pg-growth-fraction strong span { font-size:13px; font-weight:600; color:var(--text-muted); }
+.pg-growth-fraction small { display:block; color:var(--text-muted); font-size:11px; margin-top:3px; }
+.pg-growth-track { height:7px; overflow:hidden; border-radius:100px; border:1px solid var(--border); background:var(--surface-elevated); }
+.pg-growth-track > div { height:100%; border-radius:100px; background:linear-gradient(90deg,#b3b984,#6e9873,#a0c9a1); }
+.pg-growth-milestone { display:flex; align-items:center; gap:8px; font-weight:750; color:var(--text); font-size:11px; margin-top:13px; }
+.pg-growth-milestone svg { color:#7e9c72; flex-shrink:0; }
+.pg-growth-note { display:flex; align-items:flex-start; gap:7px; color:var(--text-muted); font-size:10px; line-height:1.55; margin-top:10px; }
+.pg-growth-note svg { flex-shrink:0; margin-top:1px; }
+.pg-growth-theme-select { display:grid; grid-template-columns:1fr 1fr; gap:9px; border-top:1px solid var(--border); margin-top:17px; padding-top:15px; }
+.pg-growth-theme-button { display:flex; justify-content:center; align-items:center; gap:8px; min-height:40px; padding:8px 10px; border-radius:12px; border:1px solid var(--border); background:var(--surface-elevated); color:var(--text-muted); font-size:11px; font-weight:750; cursor:pointer; transition:border-color .18s,background .18s,color .18s; }
+.pg-growth-theme-button:hover { color:var(--text); border-color:#a6b49a; background:var(--surface); }
+.pg-growth-theme-active { color:var(--text); background:var(--surface); border-color:#8caa86; box-shadow:inset 0 0 0 1px rgba(134,159,121,.13); }
+.pg-growth-theme-active svg { color:#6e916e; }
+.pg-growth-card :focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce) { .pg-growth-theme-button { transition:none; } }

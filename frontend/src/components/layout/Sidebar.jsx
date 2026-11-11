@@ -49,7 +49,7 @@ function Avatar({ user, size = 32 }) {
       {user?.profilePicture ? (
         <img
           src={user.profilePicture}
-          alt={user.name || 'Profile'}
+          alt={user.displayName || user.name || 'Profile'}
           className="w-full h-full object-cover"
         />
       ) : (
@@ -60,7 +60,7 @@ function Avatar({ user, size = 32 }) {
             fontSize: size * 0.38,
           }}
         >
-          {getInitials(user?.name)}
+          {getInitials(user?.displayName || user?.name)}
         </span>
       )}
     </div>
@@ -96,7 +96,7 @@ function AccountDropdown({
           className="text-sm font-semibold truncate"
           style={{ color: 'var(--text)' }}
         >
-          {user?.name || 'Account'}
+          {user?.displayName || user?.name || 'Account'}
         </p>
 
         {user?.email && (
@@ -292,7 +292,7 @@ export default function Sidebar({
         break
 
       case 'progress':
-        navigate('/learn')
+        navigate('/progress')
         break
 
       case 'watchlist':

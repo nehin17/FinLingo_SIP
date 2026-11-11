@@ -27,6 +27,10 @@ public class User {
     @Column(name = "profile_picture")
     private String profilePicture;
 
+    // Nullable for schema upgrades of existing accounts; null is equivalent to version zero.
+    @Column(name = "auth_version")
+    private Integer authVersion = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -34,6 +38,9 @@ public class User {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public int getAuthVersion() { return authVersion == null ? 0 : authVersion; }
+    public void setAuthVersion(int authVersion) { this.authVersion = authVersion; }
 
     // Getters and Setters
     public UUID getId() { return id; }

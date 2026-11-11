@@ -21,15 +21,14 @@ export default function DetailedComparison({
             className="text-2xl font-bold"
             style={{ color: 'var(--text-primary)' }}
           >
-            Detailed Financial Comparison
+            Head-to-Head Metrics
           </h3>
 
           <p
             className="text-sm mt-1"
             style={{ color: 'var(--text-muted)' }}
           >
-            Compare key financial metrics side-by-side to identify
-            strengths, weaknesses, and valuation differences.
+            Financial figures, fiscal periods, and SEC source links.
           </p>
         </div>
       </div>
@@ -102,7 +101,7 @@ export default function DetailedComparison({
                 duration: 0.2,
                 delay: index * 0.03,
               }}
-              className="grid grid-cols-3 items-center px-6 py-5 border-b last:border-b-0 transition-colors hover:bg-surface-elevated/20"
+              className="grid grid-cols-3 items-center px-6 py-5 border-b last:border-b-0 transition-colors hover:bg-[var(--surface-elevated)]"
               style={{ borderColor: 'var(--border)' }}
             >
               {/* Left */}
@@ -110,12 +109,10 @@ export default function DetailedComparison({
                 <p
                   className="font-bold text-xl sm:text-2xl"
                   style={{
-                    color: leftWins
-                      ? leftCompany?.color
-                      : 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                   }}
                 >
-                  {leftMetric?.value ?? 'N/A'}
+                  {leftMetric?.value ?? '—'}
                 </p>
 
                 {leftWins && (
@@ -136,6 +133,18 @@ export default function DetailedComparison({
                 >
                   {metric}
                 </p>
+                {leftMetric?.period && rightMetric?.period && (
+                  <p className="mt-1 text-[11px] leading-tight text-[color:var(--text-muted)]">FY {leftMetric.period.slice(0, 4)} / {rightMetric.period.slice(0, 4)}</p>
+                )}
+                {(leftMetric?.unscored || rightMetric?.unscored) && (
+                  <p className="mt-1 text-[11px] leading-tight text-[color:var(--text-muted)]">Reference only</p>
+                )}
+                {(leftMetric?.sourceUrl || rightMetric?.sourceUrl) && (
+                  <div className="mt-1 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px]">
+                    {leftMetric?.sourceUrl && <a href={leftMetric.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: 'var(--primary)' }}>{leftCompany?.ticker} source</a>}
+                    {rightMetric?.sourceUrl && <a href={rightMetric.sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: 'var(--primary)' }}>{rightCompany?.ticker} source</a>}
+                  </div>
+                )}
               </div>
 
               {/* Right */}
@@ -143,12 +152,10 @@ export default function DetailedComparison({
                 <p
                   className="font-bold text-xl sm:text-2xl"
                   style={{
-                    color: rightWins
-                      ? rightCompany?.color
-                      : 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                   }}
                 >
-                  {rightMetric?.value ?? 'N/A'}
+                  {rightMetric?.value ?? '—'}
                 </p>
 
                 {rightWins && (
@@ -164,6 +171,7 @@ export default function DetailedComparison({
           )
         })}
       </div>
+      <p className="mt-3 text-xs text-[color:var(--text-muted)]">Scored using aligned annual periods · Undated P/E is reference-only.</p>
     </div>
   )
 }

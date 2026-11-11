@@ -1,129 +1,158 @@
-// src/data/caseStudies.js
-
+// Curated teaching content. Company facts are retrieved separately from FINLINGO's
+// existing Spring Boot research API; these lessons do not contain live market claims.
 export const caseStudies = [
-    {
-      id: 'nvda-vs-aapl',
-      slug: 'nvda-vs-aapl',
-  
-      title: 'Why NVIDIA Trades at a Higher P/E Than Apple',
-  
-      description:
-        'Explore how growth expectations, margin profiles, and AI market opportunity justify different valuation multiples.',
-  
-      companies: [
-        {
-          ticker: 'NVDA',
-          name: 'NVIDIA Corporation',
-          color: '#3B82F6',
-        },
-        {
-          ticker: 'AAPL',
-          name: 'Apple Inc.',
-          color: '#4F46E5',
-        },
-      ],
-  
-      difficulty: 'Intermediate',
-      readTime: 12,
-      color: '#3B82F6',
-  
-      objectives: [
-        'Understand how revenue growth rates influence valuation multiples',
-        'Compare profitability metrics across different business models',
-        'Analyze market expectations priced into stock valuations',
-        'Build a comparative investment thesis',
-      ],
+  {
+    id: 'nvda-vs-aapl', slug: 'nvda-vs-aapl',
+    title: 'NVIDIA vs Apple: What Explains Valuation Differences?',
+    description: 'Separate reported fundamentals from the expectations embedded in market valuation.',
+    companies: [
+      { ticker: 'NVDA', name: 'NVIDIA Corporation', color: '#76B900' },
+      { ticker: 'AAPL', name: 'Apple Inc.', color: '#4777C7' },
+    ],
+    difficulty: 'Intermediate', readTime: 14, color: '#3567B0', focus: 'Valuation & growth',
+    drivingQuestion: 'When would investors rationally pay a higher earnings multiple for one business than another?',
+    objectives: [
+      'Calculate and compare growth, operating margin and cash conversion from aligned annual filings.',
+      'Distinguish a reported financial fact from a forward-looking investor assumption.',
+      'Understand how growth durability and reinvestment requirements affect valuation.',
+      'Describe what additional price and EPS data would be needed for a valid P/E comparison.',
+    ],
+    framework: {
+      concept: 'A P/E multiple is price divided by earnings per share. A higher multiple can reflect higher expected growth, lower perceived risk or stronger future returns on capital—but none is guaranteed.',
+      formula: 'P/E = share price ÷ earnings per share (same basis and date)',
+      example: 'Illustrative: if company A trades at $180 with $6 trailing EPS, its P/E is 30×. At $120 with $8 EPS, company B is 15×. This arithmetic does not prove either company is mispriced.',
+      caution: 'Do not use a historical share price with a different earnings period. FINLINGO stores P/E snapshots without a verified observation date, so we do not present them as a live head-to-head valuation.',
     },
-  
-    {
-      id: 'apple-vs-microsoft-roe',
-      slug: 'apple-vs-microsoft-roe',
-  
-      title: 'Apple vs Microsoft: Understanding ROE',
-  
-      description:
-        'Compare return on equity across companies and understand how share buybacks and leverage affect this metric.',
-  
-      companies: [
-        {
-          ticker: 'AAPL',
-          name: 'Apple Inc.',
-          color: '#4F46E5',
-        },
-        {
-          ticker: 'MSFT',
-          name: 'Microsoft Corporation',
-          color: '#10B981',
-        },
-      ],
-  
-      difficulty: 'Intermediate',
-      readTime: 10,
-      color: '#10B981',
-  
-      objectives: [
-        'Understand return on equity and its components',
-        'Analyze how leverage affects ROE',
-        'Compare capital allocation strategies',
-        'Evaluate earnings quality across technology companies',
-      ],
+    metrics: ['Revenue growth', 'Operating margin', 'Net margin', 'Operating cash flow margin', 'Free cash flow'],
+    method: [
+      { title: 'Establish the evidence', text: 'Compare annual revenue growth, profitability and cash conversion using the closest available fiscal years. Note where the period ends differ.' },
+      { title: 'Construct the valuation argument', text: 'Which business would need faster sustained growth, higher reinvestment returns or lower risk to support a premium multiple?' },
+      { title: 'Challenge the argument', text: 'List two assumptions that would need to remain true for the premium to make sense and one observation that could disprove each.' },
+    ],
+    researchPrompts: [
+      'How much of observed revenue growth could be structural rather than cyclical?',
+      'What do cash conversion and margins add to the growth comparison?',
+      'Which market data and dated EPS are still required to test the valuation gap?',
+    ],
+    quiz: {
+      question: 'Two companies have the same P/E today, but one may grow earnings faster. Which conclusion follows?',
+      options: ['Both are worth the same amount', 'The expected growth difference may matter, but more evidence is needed', 'The faster grower is automatically undervalued'],
+      answer: 1,
+      explanation: 'P/E alone does not describe future cash flows, durability, risk or reinvestment. Check the expectations and a consistent valuation date.',
     },
-  
-    {
-      id: 'amazon-cash-flow-paradox',
-      slug: 'amazon-cash-flow-paradox',
-  
-      title: "Amazon's Cash Flow Paradox",
-  
-      description:
-        'Learn why high revenue growth can coexist with low accounting profits in investment-heavy business models.',
-  
-      companies: [
-        {
-          ticker: 'AMZN',
-          name: 'Amazon.com Inc.',
-          color: '#FF9900',
-        },
-      ],
-  
-      difficulty: 'Intermediate',
-      readTime: 15,
-      color: '#FF9900',
-  
-      objectives: [
-        'Understand the difference between accounting earnings and cash flow',
-        'Analyze capital expenditure strategies',
-        'Evaluate free cash flow quality',
-        'Assess long-term business sustainability',
-      ],
+  },
+  {
+    id: 'apple-vs-microsoft-roe', slug: 'apple-vs-microsoft-roe',
+    title: 'Apple vs Microsoft: When ROE Misleads',
+    description: 'See how equity balances, buybacks and financing choices can change the meaning of return on equity.',
+    companies: [
+      { ticker: 'AAPL', name: 'Apple Inc.', color: '#4777C7' },
+      { ticker: 'MSFT', name: 'Microsoft Corporation', color: '#3184B5' },
+    ],
+    difficulty: 'Intermediate', readTime: 12, color: '#2E78AD', focus: 'Profitability & capital structure',
+    drivingQuestion: 'Does a higher return on equity always mean a better operating business?',
+    objectives: [
+      'Calculate ROE using net income and average positive book equity.',
+      'Recognize how changes in book equity can magnify the reported ratio.',
+      'Cross-check ROE with operating margin and operating cash flow.',
+      'Recognize cases where ROE is not meaningful because book equity is zero or negative.',
+    ],
+    framework: {
+      concept: 'Return on equity relates accounting profit to the average shareholders’ equity supporting it. Buybacks can lower the denominator without changing operating performance.',
+      formula: 'ROE = net income ÷ average beginning/end book equity × 100%',
+      example: 'Illustrative: $20B profit ÷ $100B average equity = 20% ROE. If equity falls to $50B while profit stays $20B, ROE rises to 40% without a change in operating income.',
+      caution: 'ROE based on small or negative equity can mislead. Compare multiple years and read the equity statement and repurchase disclosures.',
     },
-  
-    {
-      id: 'tesla-growth-sustainability',
-      slug: 'tesla-growth-sustainability',
-  
-      title: 'Tesla: Growth at What Cost?',
-  
-      description:
-        'Analyze valuation sustainability when growth rates eventually normalize in mature markets.',
-  
-      companies: [
-        {
-          ticker: 'TSLA',
-          name: 'Tesla Inc.',
-          color: '#E82127',
-        },
-      ],
-  
-      difficulty: 'Advanced',
-      readTime: 18,
-      color: '#E82127',
-  
-      objectives: [
-        'Analyze high-growth company valuation frameworks',
-        'Understand growth rate normalization scenarios',
-        'Evaluate competitive dynamics in emerging markets',
-        'Build sensitivity analyses for valuation assumptions',
-      ],
+    metrics: ['Return on equity', 'Operating margin', 'Net margin', 'Equity / assets', 'Operating cash flow margin'],
+    method: [
+      { title: 'Calculate before interpreting', text: 'Check net income and the beginning and ending equity used in the denominator. Skip ROE when the denominator is non-positive.' },
+      { title: 'Identify denominator effects', text: 'Investigate repurchases, dividends, accounting adjustments and losses that may have changed book equity.' },
+      { title: 'Cross-check the operating business', text: 'Review operating margin and cash generation. Ask whether high ROE reflects a better business or a smaller equity base.' },
+    ],
+    researchPrompts: [
+      'Does the company with higher ROE also have higher operating profitability?',
+      'How would a change in average equity affect ROE at unchanged income?',
+      'Which disclosures would help explain shareholder-equity movements?',
+    ],
+    quiz: {
+      question: 'A company buys back shares and lowers book equity while net income stays flat. What can happen to ROE?',
+      options: ['ROE can increase without improved operations', 'ROE must decrease', 'ROE cannot change unless revenue increases'],
+      answer: 0,
+      explanation: 'A lower positive equity denominator can increase ROE even when net income is unchanged.',
     },
-  ]
+  },
+  {
+    id: 'amazon-cash-flow-paradox', slug: 'amazon-cash-flow-paradox',
+    title: 'Amazon: Why Profit and Cash Flow Diverge',
+    description: 'Trace how noncash charges, working capital and capital spending change cash generation.',
+    companies: [{ ticker: 'AMZN', name: 'Amazon.com Inc.', color: '#E9A03B' }],
+    difficulty: 'Intermediate', readTime: 16, color: '#C78A2F', focus: 'Earnings quality & reinvestment',
+    drivingQuestion: 'How can a profitable business generate less free cash flow than its reported earnings suggest?',
+    objectives: [
+      'Distinguish net income, cash from operations and free cash flow.',
+      'Calculate the effect of capital expenditures on free cash flow.',
+      'Explain how working capital and noncash charges change cash generation.',
+      'Separate recurring investment needs from temporary cash-flow timing.',
+    ],
+    framework: {
+      concept: 'Net income follows accrual accounting, while operating cash flow reflects cash movements adjusted for timing and noncash items. Free cash flow commonly deducts capital expenditure from operating cash flow.',
+      formula: 'FCF (simple definition) = operating cash flow − capital spending',
+      example: 'Illustrative: $35B net income, $50B operating cash flow and $38B capex result in $12B free cash flow under this definition.',
+      caution: 'FCF definitions vary. Check lease obligations, acquisitions, working-capital changes and whether capex is required to sustain current operations.',
+    },
+    metrics: ['Revenue growth', 'Net margin', 'Operating cash flow margin', 'Free cash flow', 'Free cash flow margin'],
+    method: [
+      { title: 'Start with reported earnings', text: 'Compare net income with revenue and identify the latest annual reporting period.' },
+      { title: 'Bridge earnings to operating cash', text: 'Read the cash flow statement for noncash charges and changes in receivables, inventory and payables.' },
+      { title: 'Deduct reinvestment', text: 'Find capital expenditure and estimate free cash flow. Then assess whether that spending is likely to recur.' },
+    ],
+    researchPrompts: [
+      'Does cash from operations exceed or trail reported net income?',
+      'What share of operating cash is used for capital expenditure?',
+      'Would an unusually strong cash-flow year repeat under normal working-capital conditions?',
+    ],
+    quiz: {
+      question: 'Operating cash flow is $40B and capex cash outflows are $28B. What is simple free cash flow?',
+      options: ['$68B', '$12B', '$28B'],
+      answer: 1,
+      explanation: '$40B operating cash flow less $28B capex gives $12B under the simple FCF definition.',
+    },
+  },
+  {
+    id: 'tesla-growth-sustainability', slug: 'tesla-growth-sustainability',
+    title: 'Tesla: Stress-Testing a Growth Thesis',
+    description: 'Investigate what happens to a valuation thesis when growth moderates and margins change.',
+    companies: [{ ticker: 'TSLA', name: 'Tesla Inc.', color: '#C95861' }],
+    difficulty: 'Advanced', readTime: 18, color: '#C95861', focus: 'Scenario analysis & risk',
+    drivingQuestion: 'What combination of sales growth, profitability and reinvestment would support a long-term investment thesis?',
+    objectives: [
+      'Read annual revenue growth and operating profitability without extrapolating one strong year.',
+      'Construct base, upside and downside assumptions explicitly.',
+      'Consider competitive pressure, pricing power and capital intensity.',
+      'Identify what evidence would falsify the proposed growth thesis.',
+    ],
+    framework: {
+      concept: 'A growth-stock thesis is a set of assumptions about future sales, margins, investment requirements and risk. A good analyst checks sensitivity rather than assuming current growth persists.',
+      formula: 'Projected revenue = current revenue × (1 + assumed growth rate)^years',
+      example: 'Illustrative: $100B revenue growing 15% per year would reach about $152B after three years. At 5% growth it would reach about $116B; neither scenario is a forecast.',
+      caution: 'Scenario inputs are assumptions, not price targets. Margin changes, dilution, capex and discount rates can matter as much as revenue growth.',
+    },
+    metrics: ['Revenue growth', 'Operating margin', 'Net margin', 'Free cash flow margin', 'Free cash flow'],
+    method: [
+      { title: 'Build the base year', text: 'Record actual annual revenue, margins and cash flow from the financial statements. Do not combine unrelated reporting periods.' },
+      { title: 'Stress-test assumptions', text: 'Consider revenue-growth deceleration, pricing pressure and different capital requirements.' },
+      { title: 'Identify disconfirming evidence', text: 'Name the disclosure or reported trend that would require a change to the thesis.' },
+    ],
+    researchPrompts: [
+      'How sensitive is future earnings power to a small change in operating margin?',
+      'Which reported data distinguishes growth from price or volume effects?',
+      'What would indicate the current reinvestment burden is sustainable?',
+    ],
+    quiz: {
+      question: 'Which is the strongest way to evaluate a growth company’s future outlook?',
+      options: ['Use last year’s growth forever', 'Project only revenue, ignoring margins', 'Test several growth, margin and reinvestment scenarios'],
+      answer: 2,
+      explanation: 'Valuation depends on the range of potential future cash flows, not a single extrapolated growth rate.',
+    },
+  },
+]

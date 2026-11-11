@@ -7,7 +7,7 @@ export default function ROEBreakdown() {
   const [debt, setDebt] = useState(2000)
 
   const roe = equity > 0 ? ((netIncome / equity) * 100).toFixed(2) : 0
-  const totalAssets = parseFloat(equity) + parseFloat(debt)
+  const simplifiedCapital = parseFloat(equity) + parseFloat(debt)
   const debtToEquity = equity > 0 ? (debt / equity).toFixed(2) : 0
 
   return (
@@ -89,12 +89,12 @@ export default function ROEBreakdown() {
             <span className="font-bold text-text-primary">{debtToEquity}x</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-text-muted">Total Assets</span>
-            <span className="font-bold text-text-primary">₹{totalAssets.toFixed(0)} Cr</span>
+            <span className="text-sm text-text-muted">Equity + Debt (Illustrative)</span>
+            <span className="font-bold text-text-primary">₹{simplifiedCapital.toFixed(0)} Cr</span>
           </div>
           <p className="text-xs text-text-secondary pt-3 border-t border-border/50">
             Higher leverage (debt) can artificially inflate ROE in good times but increases
-            financial risk.
+            financial risk. Equity plus debt does not represent all company assets or liabilities.
           </p>
         </motion.div>
       </div>

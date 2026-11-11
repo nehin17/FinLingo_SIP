@@ -23,7 +23,7 @@ export default function FeaturedCaseStudies() {
         </h2>
 
         <p className="text-sm text-text-secondary mt-2">
-          Real-world financial analysis with actual companies from the market.
+          Guided research labs with annual SEC figures, analytical methods and practical questions.
         </p>
       </div>
 

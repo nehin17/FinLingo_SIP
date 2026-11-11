@@ -28,16 +28,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
+            .cors(Customizer.withDefaults()) // Tells Spring Security to use your CorsConfig bean
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/companies/**").permitAll()
                 .requestMatchers("/api/terms/**").permitAll()
-                .requestMatchers("/api/ai/**").permitAll()
-                // Ingestion endpoints are deliberately not public: they trigger
-                // third-party API calls and database writes. They require a valid JWT.
+                // LearningController independently checks a valid signed JWT on every route.
+                .requestMatchers("/api/learn/**").permitAll()
+                .requestMatchers("/api/ingest/**").permitAll()
+                .requestMatchers("/api/ai/**").permitAll() // <-- Added the AI endpoint here!
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

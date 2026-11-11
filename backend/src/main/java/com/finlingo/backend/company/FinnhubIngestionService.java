@@ -2,6 +2,7 @@ package com.finlingo.backend.company;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
@@ -10,17 +11,25 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class FinnhubIngestionService {
 
-    @Value("${finnhub.api.key}")
+    @Value("${finnhub.api.key:placeholder}")
     private String apiKey;
 
     @Value("${finnhub.api.base-url:https://finnhub.io/api/v1}")
     private String baseUrl;
+
+    @Value("${FINLINGO_NEWS_AUTO_REFRESH:true}")
+    private boolean autoRefreshNews;
 
     private final CompanyRepository companyRepository;
     private final PriceHistoryRepository priceHistoryRepository;
@@ -36,6 +45,98 @@ public class FinnhubIngestionService {
         this.priceHistoryRepository = priceHistoryRepository;
         this.newsItemRepository = newsItemRepository;
         this.restClient = RestClient.create();
+    }
+
+    /**
+     * One Finnhub request per ticker. News is cached in PostgreSQL; public page
+     * requests must never call this method. Returns the count of newly saved items.
+     */
+    public int refreshCompanyNews(String ticker) {
+        String symbol = ticker.toUpperCase(Locale.ROOT);
+        if (apiKey == null || apiKey.isBlank() || "placeholder".equalsIgnoreCase(apiKey)) {
+            throw new IllegalStateException("Configure a real FINNHUB_API_KEY on the backend");
+        }
+        Company company = companyRepository.findByTickerIgnoreCase(symbol)
+                .orElseThrow(() -> new IllegalArgumentException("Company not found: " + symbol));
+
+        LocalDate today = LocalDate.now();
+        LocalDate from = today.minusDays(7);
+        List<Map<String, Object>> fetched = restClient.get()
+                .uri(baseUrl + "/company-news?symbol=" + symbol
+                        + "&from=" + from + "&to=" + today)
+                .header("X-Finnhub-Token", apiKey)
+                .retrieve()
+                .body(List.class);
+        if (fetched == null || fetched.isEmpty()) return 0;
+
+        // Most recent first. Ignore malformed/future-dated results and duplicates.
+        fetched = new ArrayList<>(fetched);
+        fetched.sort(Comparator.comparingLong((Map<String, Object> n) -> {
+            Object timestamp = n.get("datetime");
+            return timestamp instanceof Number ? ((Number) timestamp).longValue() : 0L;
+        }).reversed());
+        Set<String> seenHeadlines = new HashSet<>();
+        Set<String> seenUrls = new HashSet<>();
+        int saved = 0;
+        long now = Instant.now().getEpochSecond();
+        long earliest = now - (8L * 24 * 3600);
+
+        for (Map<String, Object> n : fetched) {
+            String headline = stringValue(n.get("headline"));
+            String url = stringValue(n.get("url"));
+            Object timestamp = n.get("datetime");
+            if (headline == null || headline.isBlank() || url == null || !url.startsWith("https://")
+                    || !(timestamp instanceof Number)
+                    || !CompanyUniverse.matchesNewsHeadline(symbol, headline)) continue;
+            long published = ((Number) timestamp).longValue();
+            if (published < earliest || published > now + 600) continue;
+            String related = stringValue(n.get("related"));
+            if (related != null && !related.isBlank()) {
+                boolean isRelated = java.util.Arrays.stream(related.split("[,;\\s]+"))
+                        .anyMatch(r -> r.equalsIgnoreCase(symbol));
+                if (!isRelated) continue;
+            }
+            String normalizedHeadline = headline.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
+            if (!seenUrls.add(url) || !seenHeadlines.add(normalizedHeadline)) continue;
+            if (newsItemRepository.existsByCompanyTickerAndUrl(symbol, url)) continue;
+
+            NewsItem item = new NewsItem();
+            item.setCompany(company);
+            item.setHeadline(headline.trim());
+            String source = stringValue(n.get("source"));
+            item.setSource(source == null ? null : source.substring(0, Math.min(100, source.length())));
+            item.setUrl(url);
+            item.setPublishedAt(LocalDateTime.ofInstant(Instant.ofEpochSecond(published),
+                    ZoneId.systemDefault()));
+            newsItemRepository.save(item);
+            if (++saved >= 40) break;
+        }
+        return saved;
+    }
+
+    /** Refresh after startup and twice daily while the backend is running. */
+    @Scheduled(initialDelay = 20000, fixedDelay = 43200000)
+    public void scheduledNewsRefresh() {
+        if (!autoRefreshNews) return;
+        if (apiKey == null || apiKey.isBlank() || "placeholder".equalsIgnoreCase(apiKey)
+                || apiKey.startsWith("YOUR_")) {
+            System.err.println("Finnhub news refresh skipped: configure a real FINNHUB_API_KEY");
+            return;
+        }
+        for (String ticker : CompanyUniverse.TICKERS.stream().sorted().toList()) {
+            try {
+                int saved = refreshCompanyNews(ticker);
+                System.out.println("News " + ticker + ": " + saved + " new articles");
+            } catch (Exception e) {
+                System.err.println("News refresh failed for " + ticker + ": " + e.getMessage());
+            }
+            try {
+                Thread.sleep(2500); // About 24 news calls/minute, below common free rate limits.
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
     }
 
     public Company ingestCompany(String ticker) {
@@ -511,11 +612,16 @@ public class FinnhubIngestionService {
                         : newsList
                 ) {
 
-                    if (newsData.get("headline")
-                            == null) {
+                    if (!CompanyUniverse.matchesNewsHeadline(
+                            symbol, stringValue(newsData.get("headline")))) {
                         continue;
                     }
 
+                    String incomingUrl = stringValue(newsData.get("url"));
+                    if (incomingUrl == null || !incomingUrl.startsWith("https://") ||
+                            newsItemRepository.existsByCompanyTickerAndUrl(symbol, incomingUrl)) {
+                        continue;
+                    }
                     NewsItem newsItem =
                             new NewsItem();
 

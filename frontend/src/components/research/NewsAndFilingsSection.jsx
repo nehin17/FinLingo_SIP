@@ -19,6 +19,7 @@ function formatDate(date) {
 export default function NewsAndFilingsSection({
   news = [],
   filings = [],
+  ticker = '',
   loading = false,
 }) {
   if (loading) {
@@ -88,7 +89,7 @@ export default function NewsAndFilingsSection({
         {/* News */}
         <div className="md:col-span-2">
           <p className="text-[10px] uppercase tracking-wider font-bold text-text-muted mb-2">
-            Latest News
+            Latest {ticker || 'Company'} News
           </p>
 
           {safeNews.length === 0 ? (
@@ -97,7 +98,7 @@ export default function NewsAndFilingsSection({
               style={{ background: 'var(--surface-elevated)' }}
             >
               <p className="text-xs text-text-muted">
-                No recent news available.
+                No articles published in the last seven days are available.
               </p>
             </div>
           ) : (
@@ -145,7 +146,7 @@ export default function NewsAndFilingsSection({
                         <p className="text-[11px] text-text-muted mt-1">
                           {source}
                           {source && date ? ' · ' : ''}
-                          {date}
+                          {source.includes('GDELT') ? `Indexed ${date}` : date}
                         </p>
                       )}
                     </div>
@@ -161,12 +162,18 @@ export default function NewsAndFilingsSection({
               })}
             </div>
           )}
+          {safeNews.some((n) => typeof n.source === 'string' && n.source.includes('GDELT')) && (
+            <p className="mt-2 text-[10px] text-text-muted">
+              News index: <a href="https://www.gdeltproject.org/" target="_blank" rel="noopener noreferrer"
+                className="underline hover:text-text-primary">GDELT Project</a>
+            </p>
+          )}
         </div>
 
         {/* Filings */}
         <div>
           <p className="text-[10px] uppercase tracking-wider font-bold text-text-muted mb-2">
-            Filings
+            {ticker ? `${ticker} SEC Filings` : 'SEC Filings'}
           </p>
 
           {safeFilings.length === 0 ? (

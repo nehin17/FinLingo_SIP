@@ -1,60 +1,25 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
-export default function AnalystSummary({
-  leftCompany,
-  rightCompany,
-}) {
-  // Backend-safe fallbacks while data is loading
-  const leftTicker = leftCompany?.ticker || 'Left company'
-  const rightTicker = rightCompany?.ticker || 'Right company'
-  const accentColor = leftCompany?.color || 'var(--primary)'
-
+export default function AnalystSummary({ leftCompany, rightCompany }) {
+  const reducedMotion = useReducedMotion()
+  const metricNames = Object.keys(leftCompany?.metrics || {}).filter((key) => typeof leftCompany.metrics[key]?.score === 'number')
+  const leftWins = metricNames.filter((key) => leftCompany.metrics[key]?.score === 100)
+  const rightWins = metricNames.filter((key) => rightCompany.metrics[key]?.score === 100)
+  const scored = metricNames.length
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl p-8 mb-12 border-l-4"
-      style={{
-        background: 'var(--surface)',
-        borderColor: accentColor,
-      }}
-    >
-      <h3
-        className="text-xl font-bold mb-5"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        Analyst Summary
-      </h3>
-
-      <div className="space-y-5 text-base leading-relaxed">
-        <p style={{ color: 'var(--text-secondary)' }}>
-          <strong style={{ color: 'var(--text-primary)' }}>
-            {leftTicker} appears better positioned for investors seeking
-            high-growth exposure
-          </strong>
-          , supported by exceptional revenue momentum and industry-leading
-          operating margins. The company demonstrates superior profitability
-          metrics and maintains a balanced balance sheet relative to its growth
-          profile.
-        </p>
-
-        <p style={{ color: 'var(--text-secondary)' }}>
-          <strong style={{ color: 'var(--text-primary)' }}>
-            {rightTicker} remains the stronger choice for investors prioritizing
-            valuation discipline, capital efficiency, and business stability.
-          </strong>
-          {' '}The company's more moderate valuation multiple and exceptional
-          return on equity provide a more conservative risk-adjusted profile
-          suitable for long-term investors.
-        </p>
-
-        <p style={{ color: 'var(--text-secondary)' }}>
-          The current comparison suggests that <strong style={{ color: 'var(--text-primary)' }}>{leftTicker}</strong> has the stronger
-          near-term fundamental profile, while <strong style={{ color: 'var(--text-primary)' }}>{rightTicker}</strong> offers a more balanced
-          risk-adjusted profile for conservative investors seeking stability and
-          earnings quality.
-        </p>
-      </div>
-    </motion.div>
+    <motion.section initial={reducedMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+      className="mb-10 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm sm:p-8">
+      <h3 className="mb-4 text-xl font-bold text-[color:var(--text-primary)]">Analyst Summary</h3>
+      {scored ? <div className="grid gap-4 text-sm leading-relaxed text-[color:var(--text-secondary)] sm:grid-cols-2">
+        <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', borderLeft: `3px solid ${leftCompany.color}`, background: 'var(--surface-elevated)' }}>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{leftCompany.ticker} · {leftWins.length} wins</span>
+          <p className="mt-2 text-[color:var(--text-muted)]">{leftWins.length ? leftWins.slice(0, 3).join(' · ') : 'No metric leads in eligible rounds'}</p>
+        </div>
+        <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', borderLeft: `3px solid ${rightCompany.color}`, background: 'var(--surface-elevated)' }}>
+          <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{rightCompany.ticker} · {rightWins.length} wins</span>
+          <p className="mt-2 text-[color:var(--text-muted)]">{rightWins.length ? rightWins.slice(0, 3).join(' · ') : 'No metric leads in eligible rounds'}</p>
+        </div>
+      </div> : <p className="text-sm text-[color:var(--text-muted)]">Not enough matched annual SEC figures to score this matchup.</p>}
+    </motion.section>
   )
 }

@@ -4,10 +4,12 @@ import com.finlingo.backend.auth.dto.LoginRequest;
 import com.finlingo.backend.auth.dto.RegisterRequest;
 import com.finlingo.backend.user.User;
 import com.finlingo.backend.user.UserRepository;
+import com.finlingo.backend.account.AccountPreferencesRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -16,13 +18,28 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AccountPreferencesRepository accountPreferences;
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          AccountPreferencesRepository accountPreferences) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.accountPreferences = accountPreferences;
+    }
+
+    private Map<String, Object> authenticatedUser(User user, String token) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (token != null) result.put("token", token);
+        result.put("email", user.getEmail());
+        result.put("displayName", user.getDisplayName() == null ? "" : user.getDisplayName());
+        result.put("difficultyLevel", user.getDifficultyLevel() == null ? "beginner" : user.getDifficultyLevel());
+        String uploaded = accountPreferences.findById(user.getId())
+            .map(p -> p.getProfilePictureData()).orElse(null);
+        result.put("profilePicture", uploaded != null ? uploaded : user.getProfilePicture());
+        return result;
     }
 
     @PostMapping("/register")
@@ -45,14 +62,9 @@ public class AuthController {
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getAuthVersion());
 
-        return Map.of(
-            "token", token,
-            "email", user.getEmail(),
-            "displayName", user.getDisplayName() != null ? user.getDisplayName() : "",
-            "difficultyLevel", user.getDifficultyLevel()
-        );
+        return authenticatedUser(user, token);
     }
 
     @PostMapping("/login")
@@ -64,14 +76,9 @@ public class AuthController {
             throw new RuntimeException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getAuthVersion());
 
-        return Map.of(
-            "token", token,
-            "email", user.getEmail(),
-            "displayName", user.getDisplayName() != null ? user.getDisplayName() : "",
-            "difficultyLevel", user.getDifficultyLevel() != null ? user.getDifficultyLevel() : "beginner"
-        );
+        return authenticatedUser(user, token);
     }
 
     @GetMapping("/me")
@@ -81,14 +88,19 @@ public class AuthController {
         }
 
         String token = authHeader.substring(7);
+        if (!jwtUtil.isTokenValid(token)) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED, "Session expired.");
+        }
         String email = jwtUtil.extractEmail(token);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.UNAUTHORIZED, "Account not found."));
+        if (jwtUtil.extractAuthVersion(token) != user.getAuthVersion()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED, "Please sign in again.");
+        }
 
-        return Map.of(
-            "email", user.getEmail(),
-            "displayName", user.getDisplayName() != null ? user.getDisplayName() : "",
-            "difficultyLevel", user.getDifficultyLevel() != null ? user.getDifficultyLevel() : "beginner"
-        );
+        return authenticatedUser(user, null);
     }
 }

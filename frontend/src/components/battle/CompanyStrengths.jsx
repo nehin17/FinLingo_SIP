@@ -1,127 +1,39 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Trophy } from 'lucide-react'
 
-function metric(company, name, fallback = 'N/A') {
-  return company?.metrics?.[name]?.value ?? fallback
-}
-
-function StrengthCard({
-  company,
-  title,
-  points,
-}) {
+function StrengthCard({ company, points }) {
+  const reducedMotion = useReducedMotion()
   return (
-    <motion.div
-      initial={{ opacity: 0, x: title.includes('Wins') ? -20 : 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.25 }}
-      className="rounded-xl p-6 border-l-4 h-full"
-      style={{
-        background: 'var(--surface)',
-        borderColor: company?.color,
-      }}
-    >
-      <div className="flex items-center gap-3 mb-5">
-        <div
-          className="w-4 h-4 rounded-full shrink-0"
-          style={{ background: company?.color }}
-        />
-
-        <h3
-          className="font-bold text-xl"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {title}
-        </h3>
+    <motion.section initial={reducedMotion ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+      className="h-full rounded-2xl border p-5 sm:p-6" style={{ background: 'var(--surface)', borderColor: `${company.color}65` }}>
+      <div className="mb-5 flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ color: company.color, background: `${company.color}1c` }}><Trophy size={19} /></span>
+        <div><h3 className="text-lg font-bold text-[color:var(--text-primary)]">Where {company.ticker} Wins</h3><p className="text-xs text-[color:var(--text-muted)]">Scored financial rounds</p></div>
       </div>
-
-      <div className="space-y-4">
-        {points.map((point) => (
-          <div key={point.heading}>
-            <h4
-              className="font-semibold text-lg mb-1"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              {point.heading}
-            </h4>
-
-            <p
-              className="text-sm leading-relaxed"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              {point.text}
-            </p>
-          </div>
-        ))}
+      <div className="space-y-3">
+        {points.length ? points.map((point, index) => (
+          <motion.div key={point.name} initial={reducedMotion ? false : { opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: reducedMotion ? 0 : index * 0.09 }} whileHover={reducedMotion ? undefined : { y: -2 }}
+            className="flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+            style={{ borderColor: 'var(--border)', background: 'var(--surface-elevated)' }}>
+            <div className="min-w-0"><h4 className="text-sm font-semibold text-[color:var(--text-primary)]">{point.name}</h4>
+              <p className="mt-1 text-xs text-[color:var(--text-muted)]">{point.period ? `FY ${point.period.slice(0, 4)}` : 'Reported annual'}</p></div>
+            <div className="text-right"><div className="whitespace-nowrap text-lg font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>{point.value}</div>
+              {point.sourceUrl && <a href={point.sourceUrl} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()} className="text-xs text-[color:var(--text-muted)] hover:text-primary hover:underline">SEC source</a>}
+            </div>
+          </motion.div>
+        )) : <p className="rounded-xl border border-[var(--border)] px-4 py-5 text-sm text-[color:var(--text-muted)]">No round wins in this matchup.</p>}
       </div>
-    </motion.div>
+    </motion.section>
   )
 }
 
-export default function CompanyStrengths({
-  leftCompany,
-  rightCompany,
-}) {
-  const leftPoints = [
-    {
-      heading: 'Growth',
-      text: `${leftCompany?.ticker}'s revenue growth (${metric(
-        leftCompany,
-        'Revenue Growth'
-      )}) exceeds ${rightCompany?.ticker}'s, indicating stronger recent expansion.`,
-    },
-    {
-      heading: 'Profitability',
-      text: `${leftCompany?.ticker} operates with higher gross and operating margins (${metric(
-        leftCompany,
-        'Gross Margin'
-      )} gross, ${metric(
-        leftCompany,
-        'Operating Margin'
-      )} operating).`,
-    },
-    {
-      heading: 'Balance Sheet',
-      text: `${leftCompany?.ticker} has a lower debt-to-equity ratio (${metric(
-        leftCompany,
-        'Debt/Equity'
-      )}), indicating a stronger leverage profile.`,
-    },
-  ]
-
-  const rightPoints = [
-    {
-      heading: 'Valuation',
-      text: `${rightCompany?.ticker} trades at a lower P/E multiple (${metric(
-        rightCompany,
-        'P/E Ratio'
-      )}), meaning investors are paying less for each unit of current earnings.`,
-    },
-    {
-      heading: 'Return on Equity',
-      text: `${rightCompany?.ticker} reports a stronger ROE of ${metric(
-        rightCompany,
-        'ROE'
-      )}, indicating superior capital efficiency.`,
-    },
-    {
-      heading: 'Stability',
-      text: 'More moderate growth expectations and valuation multiples provide a more conservative risk profile.',
-    },
-  ]
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <StrengthCard
-        company={leftCompany}
-        title={`Where ${leftCompany?.ticker} Wins`}
-        points={leftPoints}
-      />
-
-      <StrengthCard
-        company={rightCompany}
-        title={`Where ${rightCompany?.ticker} Wins`}
-        points={rightPoints}
-      />
-    </div>
-  )
+export default function CompanyStrengths({ leftCompany, rightCompany }) {
+  const wins = (company) => Object.entries(company?.metrics || {})
+    .filter(([, metric]) => metric?.score === 100).slice(0, 4)
+    .map(([name, metric]) => ({ name, value: metric.value, period: metric.period, sourceUrl: metric.sourceUrl }))
+  return <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <StrengthCard company={leftCompany} points={wins(leftCompany)} />
+    <StrengthCard company={rightCompany} points={wins(rightCompany)} />
+  </div>
 }

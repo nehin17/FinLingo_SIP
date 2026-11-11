@@ -1,212 +1,31 @@
 import { motion } from 'framer-motion'
 
-export default function TradeoffSection({
-  leftCompany,
-  rightCompany,
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl p-8 mb-12 border"
-      style={{
-        background: 'var(--surface)',
-        borderColor: 'var(--border)',
-      }}
-    >
-
-      <h2
-        className="text-2xl font-bold mb-6"
-        style={{ color: 'var(--text)' }}
-      >
-        The Trade-Off
-      </h2>
-
-
-      <div className="grid md:grid-cols-2 gap-8 mb-8">
-
-        {/* LEFT COMPANY */}
-
-        <div>
-
-          <h4
-            className="font-semibold text-xl mb-4"
-            style={{ color: 'var(--text)' }}
-          >
-            {leftCompany?.ticker}
-          </h4>
-
-
-          <ul className="space-y-3 text-base">
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: 'var(--success)' }}
-              >
-                ✓
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                Strong AI-driven revenue expansion
-              </span>
-            </li>
-
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: 'var(--success)' }}
-              >
-                ✓
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                Industry-leading operating margins
-              </span>
-            </li>
-
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: '#F59E0B' }}
-              >
-                ⚠
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                Premium valuation implies continued high growth expectations
-              </span>
-            </li>
-
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: '#F59E0B' }}
-              >
-                ⚠
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                More sensitive to execution and demand-cycle risk
-              </span>
-            </li>
-
-          </ul>
-
-        </div>
-
-
-
-        {/* RIGHT COMPANY */}
-
-        <div>
-
-          <h4
-            className="font-semibold text-xl mb-4"
-            style={{ color: 'var(--text)' }}
-          >
-            {rightCompany?.ticker}
-          </h4>
-
-
-          <ul className="space-y-3 text-base">
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: 'var(--success)' }}
-              >
-                ✓
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                More attractive earnings multiple
-              </span>
-            </li>
-
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: 'var(--success)' }}
-              >
-                ✓
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                Mature and diversified cash-generation profile
-              </span>
-            </li>
-
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: 'var(--success)' }}
-              >
-                ✓
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                Strong ecosystem and recurring revenue characteristics
-              </span>
-            </li>
-
-
-            <li className="flex gap-3 items-start">
-              <span
-                className="font-bold text-lg mt-0.5"
-                style={{ color: '#F59E0B' }}
-              >
-                ⚠
-              </span>
-
-              <span style={{ color: 'var(--text-muted)' }}>
-                Slower growth may limit near-term upside potential
-              </span>
-            </li>
-
-          </ul>
-
-        </div>
-
-      </div>
-
-
-
-      {/* KEY INSIGHT */}
-
-      <div
-        className="p-5 rounded-xl border-l-4"
-        style={{
-          background: 'rgba(37, 99, 235, 0.08)',
-          borderColor: 'var(--primary)',
-        }}
-      >
-
-        <p
-          className="text-base leading-relaxed"
-          style={{ color: 'var(--text)' }}
-        >
-
-          <strong style={{ color: 'var(--primary)' }}>
-            Key insight:
-          </strong>
-
-          {' '}
-          The comparison highlights a classic growth-versus-value trade-off.
-
-          {' '}{leftCompany?.ticker} offers superior growth and profitability,
-          while {rightCompany?.ticker} provides a more conservative valuation
-          profile and stronger capital efficiency characteristics.
-
-        </p>
-
-      </div>
-
-    </motion.div>
-  )
+function TradeColumn({ company, other }) {
+  const measured = Object.entries(company?.metrics || {}).filter(([, item]) => typeof item?.score === 'number')
+  const advantage = measured.filter(([, item]) => item.score === 100).slice(0, 3)
+  const attention = measured.filter(([, item]) => item.score === 0).slice(0, 3)
+  const points = [
+    ...advantage.map(([name, item]) => ({ name, text: `${name}: ${item.value} compared with ${other?.ticker}'s ${other?.metrics?.[name]?.value || '—'}`, good: true })),
+    ...attention.map(([name, item]) => ({ name, text: `${name}: ${item.value} versus ${other?.ticker}'s ${other?.metrics?.[name]?.value || '—'}`, good: false })),
+  ]
+  return <div>
+    <h4 className="mb-4 text-xl font-semibold" style={{ color: 'var(--text)' }}>{company?.ticker}</h4>
+    {points.length ? <ul className="space-y-3 text-base">{points.map((point) => <li key={point.name} className="flex items-start gap-3">
+      <span className="mt-0.5 text-lg font-bold" style={{ color: point.good ? 'var(--success)' : '#F59E0B' }}>{point.good ? '✓' : '!'}</span>
+      <span style={{ color: 'var(--text-muted)' }}>{point.text}</span>
+    </li>)}</ul> : <p className="text-sm text-[color:var(--text-muted)]">Insufficient comparable figures for a metric-level trade-off.</p>}
+  </div>
+}
+export default function TradeoffSection({ leftCompany, rightCompany }) {
+  return <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+    className="mb-12 rounded-2xl border p-8" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+    <h2 className="mb-6 text-2xl font-bold" style={{ color: 'var(--text)' }}>What Each Side Does Better</h2>
+    <div className="mb-8 grid gap-8 md:grid-cols-2">
+      <TradeColumn company={leftCompany} other={rightCompany} />
+      <TradeColumn company={rightCompany} other={leftCompany} />
+    </div>
+    <p className="border-t pt-5 text-sm text-[color:var(--text-muted)]" style={{ borderColor: 'var(--border)' }}>
+      Reported figures only · Not a prediction of returns.
+    </p>
+  </motion.div>
 }

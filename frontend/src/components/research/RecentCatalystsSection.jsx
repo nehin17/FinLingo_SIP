@@ -80,13 +80,17 @@ const IMPACT = {
         style={{ background: 'var(--surface)' }}
       >
         <h3 className="text-lg font-bold text-text-primary mb-5">
-          Recent Catalysts
+          Potential Catalysts
         </h3>
   
+        <p className="text-xs text-text-muted mb-4">
+          Events from company news and SEC filings · Price impact unconfirmed
+        </p>
+
         {safeCatalysts.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-sm text-text-muted">
-              No recent catalysts available.
+              No significant recent events identified.
             </p>
           </div>
         ) : (
@@ -141,13 +145,21 @@ const IMPACT = {
                     </span>
                   </div>
   
-                  <p className="text-sm font-bold text-text-primary">
-                    {title}
-                  </p>
+                  {catalyst.url ? (
+                    <a href={catalyst.url} target="_blank" rel="noopener noreferrer"
+                      className="text-sm font-bold text-text-primary hover:text-blue-500 transition-colors">
+                      {title}
+                    </a>
+                  ) : <p className="text-sm font-bold text-text-primary">{title}</p>}
   
                   {description && (
-                    <p className="text-xs text-text-muted leading-relaxed">
+                    <p className="text-xs text-text-muted leading-relaxed mt-1">
                       {description}
+                    </p>
+                  )}
+                  {catalyst.source && (
+                    <p className="text-[10px] text-text-muted mt-1">
+                      {catalyst.source}
                     </p>
                   )}
                 </div>

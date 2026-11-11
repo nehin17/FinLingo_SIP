@@ -7,13 +7,8 @@ export default function PECalculator() {
 
   const peRatio = eps > 0 ? (sharePrice / eps).toFixed(2) : 0
 
-  const getInterpretation = () => {
-    const pe = parseFloat(peRatio)
-    if (pe < 15) return 'Potentially undervalued—investors are paying less for each dollar of earnings.'
-    if (pe < 25) return 'Moderate valuation—suggests average growth expectations for the market.'
-    if (pe < 40) return 'Growth premium—market expects stronger earnings growth.'
-    return 'High premium—market pricing in substantial future growth, higher execution risk.'
-  }
+  const getInterpretation = () =>
+    'P/E is the price paid per unit of reported earnings. Compare with relevant peers, growth, earnings quality and reporting dates before drawing a valuation conclusion.'
 
   return (
     <div className="rounded-xl p-6 border border-border" style={{ background: 'var(--surface)' }}>

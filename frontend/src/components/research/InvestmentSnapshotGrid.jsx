@@ -19,22 +19,18 @@ export default function InvestmentSnapshotGrid({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-bold text-text-primary">
-              Investment Snapshot
+              Company Metrics
             </h3>
             <p className="text-xs text-text-muted mt-0.5">
-              Key valuation and market indicators
+              Valuation and growth indicators
             </p>
           </div>
   
-          {!loading && items.length > 0 && (
-            <span className="text-[11px] font-semibold text-text-muted">
-              {items.length} metrics
-            </span>
-          )}
+
         </div>
   
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
             {Array.from({ length: 8 }).map((_, index) => (
               <div
                 key={index}
@@ -61,10 +57,10 @@ export default function InvestmentSnapshotGrid({
             className="rounded-2xl border border-dashed border-border p-8
                        text-center text-sm text-text-muted"
           >
-            Snapshot data is not available for this company.
+            No verified company metrics are available yet.
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
             {items.map((metric) => (
               <div
                 key={metric.label || metric.value}

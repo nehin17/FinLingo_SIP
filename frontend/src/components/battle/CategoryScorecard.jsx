@@ -1,28 +1,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Trophy } from 'lucide-react'
 
 const CATEGORIES = {
-  growth: {
-    name: 'Growth',
-    description: 'Revenue expansion and momentum.',
-    metrics: ['Revenue Growth', 'EPS Growth'],
-  },
-  profitability: {
-    name: 'Profitability',
-    description: 'Gross and operating margin efficiency.',
-    metrics: ['Gross Margin', 'Operating Margin', 'ROE'],
-  },
-  valuation: {
-    name: 'Valuation',
-    description: 'Price paid relative to current earnings.',
-    metrics: ['P/E Ratio'],
-  },
-  health: {
-    name: 'Financial Health',
-    description: 'Balance sheet strength and leverage profile.',
-    metrics: ['Debt/Equity'],
-  },
+  growth: { name: 'Growth', description: 'Annual revenue expansion.', metrics: ['Revenue Growth'] },
+  profitability: { name: 'Profitability', description: 'Reported margin efficiency and return on equity.', metrics: ['Gross Margin', 'Operating Margin', 'Net Margin', 'ROE'] },
+  cash: { name: 'Cash Flow', description: 'Cash generated relative to sales.', metrics: ['Operating Cash Flow Margin', 'Free Cash Flow Margin'] },
+  valuation: { name: 'Valuation', description: 'Stored market multiples; not scored without a verified date.', metrics: ['P/E Ratio'] },
+  health: { name: 'Financial Health', description: 'Capitalization and liabilities relative to equity.', metrics: ['Equity / Assets', 'Liabilities / Equity'] },
 }
 
 export default function CategoryScorecard({
@@ -38,17 +23,13 @@ export default function CategoryScorecard({
   const getCategoryScore = (company, categoryKey) => {
     const category = CATEGORIES[categoryKey]
 
-    if (!company?.metrics || !category) {
-      return 0
-    }
+    if (!company?.metrics || !category) return null
 
     const scores = category.metrics
       .map((metric) => company.metrics?.[metric]?.score)
       .filter((score) => typeof score === 'number')
 
-    if (scores.length === 0) {
-      return 0
-    }
+    if (!scores.length) return null
 
     return Math.round(
       scores.reduce((total, score) => total + score, 0) /
@@ -60,6 +41,7 @@ export default function CategoryScorecard({
     const leftScore = getCategoryScore(leftCompany, categoryKey)
     const rightScore = getCategoryScore(rightCompany, categoryKey)
 
+    if (leftScore === null || rightScore === null) return null
     if (leftScore > rightScore) return 'left'
     if (rightScore > leftScore) return 'right'
 
@@ -81,8 +63,7 @@ export default function CategoryScorecard({
             className="text-sm mt-1"
             style={{ color: 'var(--text-muted)' }}
           >
-            Compare how each company performs across key
-            fundamental categories.
+            Scored fundamental rounds by category.
           </p>
         </div>
       </div>
@@ -108,16 +89,23 @@ export default function CategoryScorecard({
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-xl border p-5 cursor-pointer transition-all duration-200 hover:border-primary/20 hover:shadow-sm"
+                whileHover={{ y: -4 }} whileTap={{ scale: 0.99 }}
+                className="rounded-xl border p-5 cursor-pointer transition-all duration-200 hover:shadow-sm"
                 style={{
-                  background: 'var(--surface)',
-                  borderColor: 'var(--border)',
+                  background: 'var(--surface-elevated)',
+                  borderColor: winner === 'left' ? `${leftCompany?.color}70` : winner === 'right' ? `${rightCompany?.color}70` : 'var(--border)',
+                  boxShadow: winner ? `inset 0 0 0 1px ${(winner === 'left' ? leftCompany?.color : rightCompany?.color)}18` : undefined,
                 }}
-                onClick={() =>
-                  setExpanded(
-                    expanded === key ? null : key
-                  )
-                }
+                role="button"
+                tabIndex={0}
+                aria-expanded={expanded === key}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setExpanded(expanded === key ? null : key)
+                  }
+                }}
+                onClick={() => setExpanded(expanded === key ? null : key)}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -175,10 +163,10 @@ export default function CategoryScorecard({
                       <span
                         className="text-sm font-semibold"
                         style={{
-                          color: leftCompany?.color,
+                          color: 'var(--text-primary)',
                         }}
                       >
-                        {leftScore}
+                        {leftScore ?? '—'}
                       </span>
                     </div>
 
@@ -192,7 +180,7 @@ export default function CategoryScorecard({
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{
-                          width: `${leftScore}%`,
+                          width: `${leftScore ?? 0}%`,
                         }}
                         transition={{
                           duration: 0.8,
@@ -222,10 +210,10 @@ export default function CategoryScorecard({
                       <span
                         className="text-sm font-semibold"
                         style={{
-                          color: rightCompany?.color,
+                          color: 'var(--text-primary)',
                         }}
                       >
-                        {rightScore}
+                        {rightScore ?? '—'}
                       </span>
                     </div>
 
@@ -239,7 +227,7 @@ export default function CategoryScorecard({
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{
-                          width: `${rightScore}%`,
+                          width: `${rightScore ?? 0}%`,
                         }}
                         transition={{
                           duration: 0.8,
@@ -272,19 +260,15 @@ export default function CategoryScorecard({
                       ? `${winner === 'left'
                           ? leftCompany?.ticker
                           : rightCompany?.ticker} leads`
-                      : 'Tied'}
+                      : leftScore === null || rightScore === null ? 'Not scored' : 'Tied'}
                   </span>
 
                   {winner && (
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{
-                        background:
-                          winner === 'left'
-                            ? leftCompany?.color
-                            : rightCompany?.color,
-                      }}
-                    />
+                    <motion.div key={`${winner}-${leftCompany?.ticker}-${rightCompany?.ticker}`} initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      className="flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-bold"
+                      style={{ background: `${winner === 'left' ? leftCompany?.color : rightCompany?.color}20`, color: winner === 'left' ? leftCompany?.color : rightCompany?.color }}>
+                      <Trophy size={13} /> Round lead
+                    </motion.div>
                   )}
                 </div>
 

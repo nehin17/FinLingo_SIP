@@ -4,7 +4,7 @@ import { Activity, Star, ShieldCheck } from 'lucide-react'
 export default function ResearchHeader({
   companyName = null,
   ticker = null,
-  marketStatus = 'Live Research Mode',
+  marketStatus = 'Historical market data',
   onOpenWatchlist,
 }) {
   return (
@@ -22,7 +22,7 @@ export default function ResearchHeader({
 
         <div className="space-y-1">
           <h1 className="text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
-            {companyName ? companyName : 'Institutional Equity Research'}
+            {companyName ? companyName : 'Company Research & Financial Analysis'}
           </h1>
 
           {ticker && (
@@ -32,25 +32,20 @@ export default function ResearchHeader({
           )}
 
           <p className="text-sm text-text-muted max-w-2xl leading-relaxed">
-            Fundamental analysis, valuation, financial quality, competitive positioning,
-            catalysts, and market context designed for an institutional-style research workflow.
+            Company fundamentals, financial statements, price history, and filings.
           </p>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 shadow-sm"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-slate-300 dark:border-slate-500 bg-slate-100 dark:bg-slate-700 shadow-sm"
         >
-          <motion.span
-            animate={{ opacity: [1, 0.35, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-1.5 h-1.5 rounded-full bg-emerald-500"
-          />
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
 
-          <Activity size={13} className="text-emerald-500" />
+          <Activity size={13} className="text-slate-700 dark:text-slate-100" />
 
-          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="text-xs font-semibold text-slate-800 dark:text-white">
             {marketStatus}
           </span>
         </div>

@@ -1,0 +1,16 @@
+/* Consistent visual crop of the SAME picture shown in the navbar. */
+.account-settings .as-avatar,.account-settings .as-small-avatar{
+  border-radius:50%!important;aspect-ratio:1!important;overflow:hidden!important;
+  padding:0!important;background:#0b0c0d!important;box-shadow:none!important;
+  flex-shrink:0!important;
+}
+.account-settings .as-avatar img,.account-settings .as-small-avatar img{
+  display:block!important;width:100%!important;height:100%!important;min-width:100%!important;
+  min-height:100%!important;border-radius:50%!important;object-fit:cover!important;
+  object-position:center center!important;margin:0!important;padding:0!important;
+  transform:none!important;border:0!important;
+}
+/* A little more intentional spacing, without rearranging Settings. */
+.account-settings .as-identity-banner{gap:22px!important}
+.account-settings .as-avatar{width:78px!important;height:78px!important;flex-basis:78px!important}
+@media(max-width:550px){.account-settings .as-avatar{width:58px!important;height:58px!important;flex-basis:58px!important}}
