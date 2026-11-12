@@ -1,209 +1,68 @@
-// src/components/ai/FloatingAIAssistant.jsx
-
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { X } from 'lucide-react'
-import { api } from '../../services/api.js'
 import DemoOrb from '../demo/DemoOrb.jsx'
 import AIChatPanel from './AIChatPanel.jsx'
 
-export default function FloatingAIAssistant({
-  getResponse,
-}) {
+export default function FloatingAIAssistant() {
   const [open, setOpen] = useState(false)
-
-  // ------------------------------------------------------------
-  // Close assistant with Escape
-  // ------------------------------------------------------------
 
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setOpen(false)
-      }
+      if (event.key === 'Escape') setOpen(false)
     }
-
-    document.addEventListener(
-      'keydown',
-      handleKeyDown
-    )
-
-    return () => {
-      document.removeEventListener(
-        'keydown',
-        handleKeyDown
-      )
-    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open])
 
   return (
     <div
       id="finlingo-ai-assistant"
-
-      className="
-        fixed
-        right-5
-        bottom-5
-        sm:right-6
-        sm:bottom-6
-        z-[100]
-        flex
-        flex-col
-        items-end
-        gap-4
-      "
+      className="fixed right-5 bottom-5 sm:right-6 sm:bottom-6 z-[100] flex flex-col items-end gap-4"
     >
-
-      {/* ======================================================
-          AI CHAT WINDOW
-      ====================================================== */}
-
       <AnimatePresence>
-        
         {open && (
-            <div id="atlas-chat-panel">
-          <AIChatPanel
-            onClose={() => setOpen(false)}
-            getResponse={async (message) => {
-              try {
-                // If a specific ticker is available in the app state, use it. 
-                // Otherwise default to a general prompt or a placeholder like AAPL.
-                
-                const params = new URLSearchParams(window.location.search);
-                  const currentTicker = params.get('ticker') || null;
-
-                  const data = await api.ai.chat(currentTicker, message);
-                return data.response;
-              } catch (error) {
-                console.error("AI Chat Error:", error);
-                return "I'm having trouble connecting to my servers right now.";
-              }
-            }}
-          />
+          <div id="atlas-chat-panel">
+            <AIChatPanel onClose={() => setOpen(false)} />
           </div>
         )}
       </AnimatePresence>
 
-
-      {/* ======================================================
-          FLOATING DEMOBOT
-      ====================================================== */}
-
       <motion.button
         type="button"
-
-        onClick={() =>
-          setOpen((previousOpen) => !previousOpen)
-        }
-
+        onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-
         aria-controls="atlas-chat-panel"
-
-        aria-label={
-          open
-            ? 'Close FinLingo AI Assistant'
-            : 'Open FinLingo AI Assistant'
-        }
-
-        title={
-          open
-            ? 'Close AI Assistant'
-            : 'Open FinLingo AI Assistant'
-        }
-
-        whileHover={{
-          y: -4,
-          scale: 1.04,
-        }}
-
-        whileTap={{
-          scale: 0.95,
-        }}
-
-        className="
-          relative
-          w-16
-          h-16
-          rounded-2xl
-          flex
-          items-center
-          justify-center
-          border
-          transition-shadow
-          duration-200
-        "
-
+        aria-label={open ? 'Close FinLingo AI Assistant' : 'Open FinLingo AI Assistant'}
+        title={open ? 'Close AI Assistant' : 'Open FinLingo AI Assistant'}
+        whileHover={{ y: -4, scale: 1.04 }}
+        whileTap={{ scale: 0.95 }}
+        className="relative w-16 h-16 rounded-2xl flex items-center justify-center border transition-shadow duration-200"
         style={{
           background: 'var(--surface)',
           borderColor: 'var(--border)',
-
           boxShadow: open
             ? '0 14px 36px rgba(37, 99, 235, 0.26)'
             : '0 10px 28px rgba(15, 23, 42, 0.18)',
         }}
       >
-
-        {/* The exact DemoBot from the Live Demo */}
-        <DemoOrb
-          size={48}
-          animated={!open}
-        />
-
-
-        {/* ==================================================
-            CLOSE BADGE
-        ================================================== */}
-
+        <DemoOrb size={48} animated={!open} />
         <AnimatePresence>
           {open && (
             <motion.span
-              initial={{
-                opacity: 0,
-                scale: 0.7,
-              }}
-
-              animate={{
-                opacity: 1,
-                scale: 1,
-              }}
-
-              exit={{
-                opacity: 0,
-                scale: 0.7,
-              }}
-
-              transition={{
-                duration: 0.15,
-              }}
-
-              className="
-                absolute
-                -right-1
-                -top-1
-                w-6
-                h-6
-                rounded-full
-                flex
-                items-center
-                justify-center
-                border
-              "
-
-              style={{
-                background: 'var(--surface)',
-                borderColor: 'var(--border)',
-                color: 'var(--text-muted)',
-              }}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.15 }}
+              className="absolute -right-1 -top-1 w-6 h-6 rounded-full flex items-center justify-center border"
+              style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
             >
               <X size={13} />
             </motion.span>
           )}
         </AnimatePresence>
-
       </motion.button>
-
     </div>
   )
 }

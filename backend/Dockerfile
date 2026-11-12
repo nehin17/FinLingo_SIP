@@ -1,10 +1,19 @@
-FROM eclipse-temurin:25-jdk
 
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 
-COPY . .
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
+COPY src src
 
-RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
+RUN chmod +x mvnw && ./mvnw -DskipTests package
 
-CMD ["java", "-jar", "target/backend-0.0.1-SNAPSHOT.jar"]
+FROM eclipse-temurin:25-jre
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65.0"
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
