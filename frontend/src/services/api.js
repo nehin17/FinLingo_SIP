@@ -67,6 +67,9 @@ export const api = {
     getNews: (ticker) =>
       apiRequest(`/companies/${encodeURIComponent(ticker)}/news`),
 
+    getFilings: (ticker) =>
+      apiRequest(`/companies/${encodeURIComponent(ticker)}/filings`),
+
     search: (query) =>
         apiRequest(`/companies/search?q=${encodeURIComponent(query)}`),
 

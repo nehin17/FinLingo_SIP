@@ -15,7 +15,6 @@ import Sidebar from '../layout/Sidebar.jsx'
 import ResearchHeader from './ResearchHeader.jsx'
 import SearchCommandBar from './SearchCommandBar.jsx'
 import CompanyHeroPanel from './CompanyHeroPanel.jsx'
-import PriceChart from './PriceChart.jsx'
 import InvestmentSnapshotGrid from './InvestmentSnapshotGrid.jsx'
 import BusinessOverviewSection from './BusinessOverviewSection.jsx'
 import FinancialPerformanceSection from './FinancialPerformanceSection.jsx'
@@ -59,6 +58,7 @@ export default function ResearchWorkspace({
     const id = window.setTimeout(() => setActionMessage(''), 6000)
     return () => window.clearTimeout(id)
   }, [actionMessage])
+
   const [research, setResearch] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -76,6 +76,7 @@ export default function ResearchWorkspace({
     let active = true
     setWatched(new Set())
     if (!isAuthenticated) return () => { active = false }
+
     api.watchlist.getAll()
       .then((items) => {
         if (active) setWatched(new Set((items || []).map((item) => item.ticker)))
@@ -83,6 +84,7 @@ export default function ResearchWorkspace({
       .catch((error) => {
         if (active) setWatchError(`Unable to load saved stocks: ${error.message}`)
       })
+
     return () => { active = false }
   }, [isAuthenticated])
 
@@ -105,9 +107,7 @@ export default function ResearchWorkspace({
       })
       .catch((e) => {
         if (alive) {
-          setError(
-            e?.message || 'Failed to load research'
-          )
+          setError(e?.message || 'Failed to load research')
         }
       })
       .finally(() => {
@@ -136,6 +136,7 @@ export default function ResearchWorkspace({
         if (active) console.warn('Company catalog unavailable:', error)
       })
       .finally(() => { if (active) setSearchLoading(false) })
+
     return () => { active = false }
   }, [])
 
@@ -161,19 +162,20 @@ export default function ResearchWorkspace({
   // WATCHLIST
   // =========================================================
 
-  const isWatched = watched.has(
-    research?.company?.ticker
-  )
+  const isWatched = watched.has(research?.company?.ticker)
 
   const toggleWatch = async () => {
     const currentTicker = research?.company?.ticker
     if (!currentTicker || watchBusy || loading || currentTicker !== ticker) return
+
     if (!isAuthenticated) {
       setLoginRequired(true)
       return
     }
+
     setWatchBusy(true)
     setWatchError('')
+
     try {
       if (watched.has(currentTicker)) {
         await api.watchlist.remove(currentTicker)
@@ -203,6 +205,7 @@ export default function ResearchWorkspace({
 
   const exportReport = () => {
     if (!research?.company?.ticker || loading) return
+
     try {
       const review = readAnalystReview(research.company.ticker, owner)
       openPrintableResearchReport(research, review, analystFramework())
@@ -214,19 +217,26 @@ export default function ResearchWorkspace({
 
   const shareResearch = async () => {
     if (!research?.company?.ticker || loading) return
+
     const url = new URL('/dashboard', window.location.origin)
     url.searchParams.set('ticker', research.company.ticker)
+
     // Deliberately do not include private review notes or any session tokens.
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${research.company.name} · FINLINGO Research`, url: url.toString() })
+        await navigator.share({
+          title: `${research.company.name} · FINLINGO Research`,
+          url: url.toString()
+        })
         setActionMessage('Research link shared.')
         return
       }
+
       await navigator.clipboard.writeText(url.toString())
       setActionMessage('Research link copied.')
     } catch (err) {
       if (err?.name === 'AbortError') return
+
       try {
         await navigator.clipboard.writeText(url.toString())
         setActionMessage('Research link copied.')
@@ -249,9 +259,7 @@ export default function ResearchWorkspace({
         color: 'var(--text-primary)',
       }}
     >
-      {/* =====================================================
-          SHARED NAVBAR
-          ===================================================== */}
+      {/* SHARED NAVBAR */}
 
       <Navbar
         {...(navbarProps ?? {
@@ -267,9 +275,7 @@ export default function ResearchWorkspace({
 
       <div className="flex min-h-screen">
 
-        {/* ===================================================
-            SHARED SIDEBAR
-            =================================================== */}
+        {/* SHARED SIDEBAR */}
 
         <Sidebar
           {...(sidebarProps ?? {
@@ -280,19 +286,13 @@ export default function ResearchWorkspace({
           })}
         />
 
-        {/* ===================================================
-            RESEARCH CONTENT
-            =================================================== */}
+        {/* RESEARCH CONTENT */}
 
         <main className="flex-1 min-w-0 pt-20 sm:pt-24">
           <div className="px-4 sm:px-6 lg:px-8 pb-10">
             <div className="max-w-[1360px] mx-auto space-y-5">
 
-              {/* Research Header */}
-
               <ResearchHeader />
-
-              {/* Search */}
 
               <SearchCommandBar
                 suggestions={suggestions}
@@ -300,8 +300,6 @@ export default function ResearchWorkspace({
                 onQuery={handleQuery}
                 onSelect={handleSelect}
               />
-
-              {/* Error */}
 
               {error && (
                 <div
@@ -314,10 +312,13 @@ export default function ResearchWorkspace({
               )}
 
               {watchError && (
-                <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600">{watchError}</p>
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600"
+                >
+                  {watchError}
+                </p>
               )}
-
-              {/* Company Hero */}
 
               <CompanyHeroPanel
                 company={research?.company}
@@ -327,54 +328,26 @@ export default function ResearchWorkspace({
                 watchBusy={watchBusy}
               />
 
-              {/* Price Chart + Investment Snapshot */}
+              {/* Company Metrics — historical price performance removed for now */}
 
-              <div id="finlingo-price" style={{ scrollMarginTop: 110 }} className="grid lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2">
-                  <PriceChart
-                    chart={research?.chart}
-                    loading={loading}
-                  />
-                </div>
-
-                <div>
-                  <InvestmentSnapshotGrid
-                    snapshot={research?.snapshot}
-                    loading={loading}
-                  />
-                </div>
-              </div>
-
-              {/* Business Overview */}
-
-              <div id="finlingo-business" style={{ scrollMarginTop: 110 }}><BusinessOverviewSection
-                business={research?.business}
-                company={research?.company}
-                loading={loading}
-              /></div>
-
-              {/* Financial Performance */}
-
-              <div id="finlingo-financial" style={{ scrollMarginTop: 110 }}>
-                <FinancialPerformanceSection
-                  financials={research?.financials}
-                  revenueMix={research?.business}
-                  ticker={research?.company?.ticker}
+              <div
+                id="finlingo-price"
+                style={{ scrollMarginTop: 110 }}
+                className="rounded-2xl border border-blue-500/15 bg-gradient-to-br from-blue-500/[0.035] via-transparent to-cyan-500/[0.04] p-3 sm:p-4 shadow-sm"
+              >
+                <InvestmentSnapshotGrid
+                  snapshot={research?.snapshot}
                   loading={loading}
                 />
               </div>
 
-              {/* FINLINGO_RESEARCH_INTELLIGENCE_V2 */}
+              {/* Populated research intelligence */}
+
               <ResearchIntelligenceDashboard ticker={ticker} />
 
-              {/* Catalysts + News */}
+              {/* Company news and filings */}
 
-              <div id="finlingo-news" style={{ scrollMarginTop: 110 }} className="grid lg:grid-cols-2 gap-5">
-                <RecentCatalystsSection
-                  catalysts={research?.catalysts}
-                  loading={loading}
-                />
-
+              <div id="finlingo-news" style={{ scrollMarginTop: 110 }}>
                 <NewsAndFilingsSection
                   ticker={research?.company?.ticker}
                   news={research?.news}
@@ -383,14 +356,88 @@ export default function ResearchWorkspace({
                 />
               </div>
 
-
-              {/* Analyst Checklist */}
+              {/* Analyst review */}
 
               {research?.company?.ticker && (
-                <AnalystChecklistSection key={`${ticker}-${owner}`} ticker={ticker} owner={owner} research={research} />
+                <AnalystChecklistSection
+                  key={`${ticker}-${owner}`}
+                  ticker={ticker}
+                  owner={owner}
+                  research={research}
+                />
               )}
 
-              {/* Footer Actions */}
+              {/* Deferred sections: retained, but collapsed until data is verified. */}
+
+              <div className="space-y-3">
+                <details className="group rounded-2xl border border-border bg-[var(--surface)] p-4">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                    <span>
+                      <span className="block text-sm font-semibold text-text-primary">
+                        Company profile & financial statements
+                      </span>
+                      <span className="mt-1 block text-xs text-text-muted">
+                        Coming Soon · profile fields and reported annual/quarterly figures need verification
+                      </span>
+                    </span>
+                    <span className="rounded-full border border-border px-3 py-1 text-xs text-text-muted group-open:hidden">
+                      Show
+                    </span>
+                    <span className="rounded-full border border-border px-3 py-1 text-xs text-text-muted hidden group-open:inline">
+                      Hide
+                    </span>
+                  </summary>
+
+                  <div className="mt-4 space-y-4">
+                    <div id="finlingo-business" style={{ scrollMarginTop: 110 }}>
+                      <BusinessOverviewSection
+                        business={research?.business}
+                        company={research?.company}
+                        loading={loading}
+                      />
+                    </div>
+
+                    <div id="finlingo-financial" style={{ scrollMarginTop: 110 }}>
+                      <FinancialPerformanceSection
+                        financials={research?.financials}
+                        revenueMix={research?.business}
+                        ticker={research?.company?.ticker}
+                        loading={loading}
+                      />
+                    </div>
+                  </div>
+                </details>
+
+                <details className="group rounded-2xl border border-border bg-[var(--surface)] p-4">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                    <span>
+                      <span className="block text-sm font-semibold text-text-primary">
+                        Potential Catalysts
+                      </span>
+                      <span className="mt-1 block text-xs text-text-muted">
+                        Coming Soon · no verified company-specific catalysts available yet
+                      </span>
+                    </span>
+                    <span className="rounded-full border border-border px-3 py-1 text-xs text-text-muted group-open:hidden">
+                      Show
+                    </span>
+                    <span className="rounded-full border border-border px-3 py-1 text-xs text-text-muted hidden group-open:inline">
+                      Hide
+                    </span>
+                  </summary>
+
+                  <div
+                    className="mt-4"
+                    id="finlingo-catalysts"
+                    style={{ scrollMarginTop: 110 }}
+                  >
+                    <RecentCatalystsSection
+                      catalysts={research?.catalysts}
+                      loading={loading}
+                    />
+                  </div>
+                </details>
+              </div>
 
               <ResearchActionsFooter
                 isWatched={isWatched}
@@ -404,26 +451,70 @@ export default function ResearchWorkspace({
               />
 
               {actionMessage && (
-                <p role="status" className="rounded-xl border border-border px-4 py-3 text-xs text-text-secondary" style={{ background: 'var(--surface-elevated)' }}>{actionMessage}</p>
+                <p
+                  role="status"
+                  className="rounded-xl border border-border px-4 py-3 text-xs text-text-secondary"
+                  style={{ background: 'var(--surface-elevated)' }}
+                >
+                  {actionMessage}
+                </p>
               )}
 
               {loginRequired && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
-                     onMouseDown={(event) => { if (event.target === event.currentTarget) setLoginRequired(false) }}>
-                  <div role="dialog" aria-modal="true" aria-labelledby="research-auth-title"
-                       className="w-full max-w-md rounded-2xl border border-border p-6 shadow-2xl"
-                       style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}>
-                    <h3 id="research-auth-title" className="text-xl font-bold">Sign in to save companies</h3>
+                <div
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
+                  onMouseDown={(event) => {
+                    if (event.target === event.currentTarget) setLoginRequired(false)
+                  }}
+                >
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="research-auth-title"
+                    className="w-full max-w-md rounded-2xl border border-border p-6 shadow-2xl"
+                    style={{
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)'
+                    }}
+                  >
+                    <h3 id="research-auth-title" className="text-xl font-bold">
+                      Sign in to save companies
+                    </h3>
+
                     <p className="mt-2 text-sm text-text-muted leading-relaxed">
                       Sign in to add this company to your watchlist.
                     </p>
+
                     <div className="mt-6 flex flex-wrap gap-2">
-                      <button type="button" onClick={() => { setLoginRequired(false); onSignInClick?.() }}
-                              className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white">Sign In</button>
-                      <button type="button" onClick={() => { setLoginRequired(false); onSignUpClick?.() }}
-                              className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Create Account</button>
-                      <button type="button" onClick={() => setLoginRequired(false)}
-                              className="rounded-xl px-4 py-2 text-sm text-text-muted">Not Now</button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginRequired(false)
+                          onSignInClick?.()
+                        }}
+                        className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white"
+                      >
+                        Sign In
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginRequired(false)
+                          onSignUpClick?.()
+                        }}
+                        className="rounded-xl border border-border px-4 py-2 text-sm font-semibold"
+                      >
+                        Create Account
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setLoginRequired(false)}
+                        className="rounded-xl px-4 py-2 text-sm text-text-muted"
+                      >
+                        Not Now
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -436,4 +527,3 @@ export default function ResearchWorkspace({
     </div>
   )
 }
-
