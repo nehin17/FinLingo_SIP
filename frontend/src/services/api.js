@@ -78,6 +78,9 @@ export const api = {
         method: 'POST',
       }),
   },
+  market: {
+    getOverview: () => apiRequest('/market/overview'),
+  },
   watchlist: {
     getAll: () => apiRequest('/watchlist'),
 

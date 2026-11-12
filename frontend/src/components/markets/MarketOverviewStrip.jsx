@@ -3,144 +3,120 @@ import {
   ArrowUpRight,
   BarChart3,
   Gauge,
-} from 'lucide-react';
+} from 'lucide-react'
 
-import {
-  MARKET_BREADTH,
-  MARKET_INDICES,
-  SECTOR_PERFORMANCE,
-} from './marketContextData';
+function formatPercent(value, digits = 2) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 'â€”'
+  return `${number > 0 ? '+' : ''}${number.toFixed(digits)}%`
+}
 
-export default function MarketOverviewStrip() {
+export default function MarketOverviewStrip({ overview, loading = false }) {
+  const sectors = overview?.sectors ?? []
+  const breadth = [
+    { label: 'Advancing', value: overview?.advancers ?? 0, tone: 'positive' },
+    { label: 'Declining', value: overview?.decliners ?? 0, tone: 'negative' },
+    { label: 'Unchanged', value: overview?.unchanged ?? 0, tone: 'neutral' },
+  ]
+
+  const asOf = overview?.asOf
+    ? new Date(overview.asOf).toLocaleString()
+    : null
+
   return (
     <section className="market-overview">
-
-      {/* Moving market ticker */}
       <div className="market-index-strip">
         <div className="market-index-track">
-
-          {[...MARKET_INDICES, ...MARKET_INDICES].map((index, i) => {
-            const positive = index.change >= 0;
-
-            return (
-              <article
-                className="market-index-item"
-                key={`${index.name}-${i}`}
-              >
-                <div>
-                  <span className="market-index-symbol">
-                    {index.symbol}
-                  </span>
-
-                  <strong>{index.name}</strong>
-                </div>
-
-                <div className="market-index-value">
-                  <span>{index.value}</span>
-
-                  <span
-                    className={
-                      positive
-                        ? 'market-value-positive'
-                        : 'market-value-negative'
-                    }
-                  >
-                    {positive ? (
-                      <ArrowUpRight
-                        size={13}
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <ArrowDownRight
-                        size={13}
-                        aria-hidden="true"
-                      />
-                    )}
-
-                    {positive ? '+' : ''}
-                    {index.change.toFixed(2)}%
-                  </span>
-                </div>
-              </article>
-            );
-          })}
-
+          <article className="market-index-item">
+            <div>
+              <span className="market-index-symbol">FINLINGO</span>
+              <strong>Tracked market snapshot</strong>
+            </div>
+            <div className="market-index-value">
+              <span>
+                {loading ? 'Loadingâ€¦' : `${overview?.trackedCompanies ?? 0} tracked`}
+              </span>
+              <span className="market-value-positive">
+                {loading ? 'â€”' : `${overview?.pricedCompanies ?? 0} priced`}
+              </span>
+            </div>
+          </article>
         </div>
       </div>
 
-      {/* Market context */}
       <div className="market-context-grid">
-
         <article className="market-context-card">
           <header className="market-context-header">
             <Gauge size={16} aria-hidden="true" />
-
             <div>
               <h2>Market Breadth</h2>
-              <p>Participation across listed equities</p>
+              <p>Movement across FinLingo tracked companies</p>
             </div>
           </header>
 
           <div className="market-breadth-grid">
-            {MARKET_BREADTH.map((metric) => (
-              <div
-                className="market-breadth-item"
-                key={metric.label}
-              >
+            {breadth.map((metric) => (
+              <div className="market-breadth-item" key={metric.label}>
                 <span>{metric.label}</span>
-
-                <strong
-                  className={
-                    metric.tone === 'positive'
-                      ? 'market-value-positive'
-                      : 'market-value-negative'
-                  }
-                >
-                  {metric.value}
+                <strong className={
+                  metric.tone === 'positive'
+                    ? 'market-value-positive'
+                    : metric.tone === 'negative'
+                      ? 'market-value-negative'
+                      : ''
+                }>
+                  {loading ? 'â€”' : metric.value}
                 </strong>
               </div>
             ))}
           </div>
+          <p className="px-4 pb-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+            {loading
+              ? 'Loading stored price dataâ€¦'
+              : `${overview?.pricedCompanies ?? 0} of ${overview?.trackedCompanies ?? 0} companies have a stored price.`}
+          </p>
         </article>
 
         <article className="market-context-card">
           <header className="market-context-header">
             <BarChart3 size={16} aria-hidden="true" />
-
             <div>
               <h2>Sector Performance</h2>
-              <p>Today's broad sector movement</p>
+              <p>Average daily move by tracked sector</p>
             </div>
           </header>
 
           <div className="sector-performance-list">
-            {SECTOR_PERFORMANCE.map((sector) => {
-              const positive = sector.change >= 0;
-
-              return (
-                <div
-                  className="sector-performance-item"
-                  key={sector.name}
-                >
-                  <span>{sector.name}</span>
-
-                  <strong
-                    className={
-                      positive
-                        ? 'market-value-positive'
-                        : 'market-value-negative'
-                    }
-                  >
-                    {positive ? '+' : ''}
-                    {sector.change.toFixed(1)}%
-                  </strong>
-                </div>
-              );
-            })}
+            {loading ? (
+              <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                Loading sector dataâ€¦
+              </p>
+            ) : sectors.length ? (
+              sectors.map((sector) => {
+                const positive = Number(sector.changePercent) >= 0
+                return (
+                  <div className="sector-performance-item" key={sector.name}>
+                    <span>{sector.name} <small>({sector.companies})</small></span>
+                    <strong className={positive ? 'market-value-positive' : 'market-value-negative'}>
+                      {positive ? <ArrowUpRight size={13} aria-hidden="true" /> : <ArrowDownRight size={13} aria-hidden="true" />}
+                      {formatPercent(sector.changePercent, 1)}
+                    </strong>
+                  </div>
+                )
+              })
+            ) : (
+              <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                No sector movement available yet.
+              </p>
+            )}
           </div>
         </article>
-
       </div>
+
+      <p className="mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+        {asOf ? `Latest stored price update: ${asOf}. ` : ''}
+        Snapshot reflects saved FinLingo data, not a live exchange feed.
+      </p>
     </section>
-  );
+  )
 }

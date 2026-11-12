@@ -15,4 +15,6 @@ public interface PriceHistoryRepository
             String ticker,
             LocalDate date
     );
+
+    List<PriceHistory> findAllByOrderByDateAsc();
 }

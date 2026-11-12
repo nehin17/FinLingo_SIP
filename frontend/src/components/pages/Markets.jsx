@@ -14,9 +14,9 @@ import MarketMoversSection from '../markets/MarketMoversSection'
 
 import '../markets/markets.css'
 
-// ────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Helpers
-// ────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function normalize(value = '') {
   return value.trim().toLowerCase()
@@ -50,9 +50,7 @@ function getSearchScore(stock, query) {
 }
 
 function parseMarketCap(value = '') {
-  const number = Number.parseFloat(
-    String(value).replace(/[₹$,\s]/g, '')
-  )
+  const number = Number.parseFloat(String(value ?? '').replace(/[^0-9.\-]/g, ''))
 
   if (Number.isNaN(number)) return 0
 
@@ -75,9 +73,9 @@ function getVisibleStocks({
 
   let result = stocks.filter((stock) => {
     const matchesFilter =
-      activeFilter === 'All Stocks' ||
+      activeFilter === 'all' ||
       stock.market === activeFilter ||
-      stock.sector === activeFilter
+      normalize(stock.sector) === normalize(activeFilter.replaceAll('-', ' '))
 
     if (!matchesFilter) return false
     if (!query) return true
@@ -132,9 +130,9 @@ function getVisibleStocks({
   }
 }
 
-// ────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Component
-// ────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export default function Markets({
   isAuthenticated,
@@ -148,14 +146,14 @@ export default function Markets({
   sidebarProps,
 
   // Backend/API data
-  stocks = [],
+  stocks: suppliedStocks = [],
   companyResearch = {},
-  loading = false,
-  error = null,
+  loading: suppliedLoading = false,
+  error: suppliedError = null,
 }) {
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] =
-    useState('All Stocks')
+    useState('all')
 
   const [sortBy, setSortBy] =
     useState('default')
@@ -165,9 +163,101 @@ export default function Markets({
 
   const [watchedTickers, setWatchedTickers] =
     useState(() => new Set())
+  const [loginRequired, setLoginRequired] = useState(false)
 
   const [mobileSidebarOpen, setMobileSidebarOpen] =
     useState(false)
+  const [marketOverview, setMarketOverview] = useState(null)
+  const [marketOverviewLoading, setMarketOverviewLoading] = useState(true)
+  const [catalogueStocks, setCatalogueStocks] = useState([])
+  const [catalogueLoading, setCatalogueLoading] = useState(true)
+  const [catalogueError, setCatalogueError] = useState(null)
+
+  // Load the tracked company universe from PostgreSQL, then enrich each
+  // company with its locally stored quote/research DTO. No Finnhub calls here.
+  useEffect(() => {
+    let active = true
+    async function loadCatalogue() {
+      setCatalogueLoading(true)
+      setCatalogueError(null)
+      try {
+        const companies = await api.companies.getAll()
+        const rows = await Promise.all(companies.map(async (company) => {
+          try {
+            const research = await api.companies.getResearchByTicker(company.ticker)
+            const exchange = research.exchange ?? company.exchange ?? ''
+            const market = /NSE|BSE/i.test(exchange) || /india/i.test(research.country ?? company.country ?? '') ? 'india' : 'us'
+            const price = Number(research.price ?? 0)
+            const change = Number(research.change ?? 0)
+            const marketCap = research.marketCapitalization ?? company.marketCapitalization ?? null
+            const revenueGrowth = research.revenueGrowth ?? company.revenueGrowth ?? null
+            const pe = research.pe ?? company.peRatio ?? null
+            return {
+              ...company, ...research,
+              ticker: company.ticker,
+              name: research.name ?? company.name,
+              shortName: research.name ?? company.name,
+              exchange, market, price, change,
+              marketCap,
+              marketCapRaw: marketCap == null ? 0 : Number(marketCap),
+              revenueGrowthRaw: revenueGrowth == null ? null : Number(revenueGrowth),
+              peRaw: pe == null ? null : Number(pe),
+              logoUrl: null,
+              chartData: Array.isArray(research.chartData) ? research.chartData : [],
+            }
+          } catch (err) {
+            console.warn(`Research data unavailable for ${company.ticker}`, err)
+            return { ...company, ticker: company.ticker, name: company.name,
+              shortName: company.name, exchange: company.exchange ?? '',
+              market: /NSE|BSE/i.test(company.exchange ?? '') ? 'india' : 'us',
+              price: 0, change: 0, marketCap: company.marketCapitalization ?? null,
+              marketCapRaw: Number(company.marketCapitalization ?? 0),
+              revenueGrowthRaw: company.revenueGrowth == null ? null : Number(company.revenueGrowth),
+              peRaw: company.peRatio == null ? null : Number(company.peRatio),
+              chartData: [] }
+          }
+        }))
+        if (active) setCatalogueStocks(rows)
+      } catch (err) {
+        if (active) setCatalogueError(err.message || 'Unable to load company catalogue')
+      } finally {
+        if (active) setCatalogueLoading(false)
+      }
+    }
+    loadCatalogue()
+    return () => { active = false }
+  }, [])
+
+  const stocks = suppliedStocks.length ? suppliedStocks : catalogueStocks
+  const loading = suppliedLoading || (!suppliedStocks.length && catalogueLoading)
+  const error = suppliedError || (!suppliedStocks.length ? catalogueError : null)
+
+  useEffect(() => {
+    let active = true
+    let requestInFlight = false
+
+    const refreshOverview = async () => {
+      if (requestInFlight) return
+      requestInFlight = true
+      try {
+        const data = await api.market.getOverview()
+        if (active) setMarketOverview(data)
+      } catch (err) {
+        console.error('Failed to refresh market overview:', err)
+      } finally {
+        requestInFlight = false
+        if (active) setMarketOverviewLoading(false)
+      }
+    }
+
+    refreshOverview()
+    const intervalId = window.setInterval(refreshOverview, 60000)
+
+    return () => {
+      active = false
+      window.clearInterval(intervalId)
+    }
+  }, [])
     // Load saved watchlist on component mount
   useEffect(() => {
     async function loadWatchlist() {
@@ -232,14 +322,14 @@ export default function Markets({
     setSearch(value)
 
     const nextFilter = value.trim()
-      ? 'All Stocks'
+      ? 'all'
       : activeFilter
 
     if (
       value.trim() &&
-      activeFilter !== 'All Stocks'
+      activeFilter !== 'all'
     ) {
-      setActiveFilter('All Stocks')
+      setActiveFilter('all')
     }
 
     const matches = getVisibleStocks({
@@ -284,10 +374,14 @@ export default function Markets({
   }
 
   async function toggleWatch(ticker) {
+    if (!isAuthenticated) {
+      setLoginRequired(true)
+      return
+    }
+
     try {
       if (watchedTickers.has(ticker)) {
         await api.watchlist.remove(ticker)
-
         setWatchedTickers((current) => {
           const next = new Set(current)
           next.delete(ticker)
@@ -295,18 +389,18 @@ export default function Markets({
         })
       } else {
         await api.watchlist.add(ticker)
-
-        setWatchedTickers((current) => {
-          const next = new Set(current)
-          next.add(ticker)
-          return next
-        })
+        setWatchedTickers((current) => new Set(current).add(ticker))
       }
     } catch (error) {
+      if (error.status === 401 || error.status === 403) {
+        setLoginRequired(true)
+        return
+      }
       console.error('FAILED WATCHLIST:', error)
-      alert(error.message)
+      alert(error.message || 'Unable to update your watchlist.')
     }
   }
+
   return (
     <div
       className="min-h-screen transition-colors duration-300"
@@ -365,7 +459,7 @@ export default function Markets({
         >
           <div className="w-full max-w-[1400px] mx-auto space-y-6">
 
-            <MarketOverviewStrip />
+            <MarketOverviewStrip overview={marketOverview} loading={marketOverviewLoading} />
 
             <SearchFilterToolbar
               search={search}
@@ -447,12 +541,46 @@ export default function Markets({
               </div>
             )}
 
-            <MarketMoversSection />
+            <MarketMoversSection gainers={marketOverview?.gainers ?? []} losers={marketOverview?.losers ?? []} loading={marketOverviewLoading} />
 
+            {loginRequired && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4">
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="markets-watchlist-auth-title"
+                  className="w-full max-w-md rounded-2xl border border-border p-6 shadow-2xl"
+                  style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}
+                >
+                  <h3 id="markets-watchlist-auth-title" className="text-xl font-bold">
+                    Sign in to save companies
+                  </h3>
+                  <p className="mt-2 text-sm text-text-muted">
+                    Create an account or sign in to add companies to your watchlist.
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => { setLoginRequired(false); onSignInClick?.() }}
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white">
+                      Sign In
+                    </button>
+                    <button type="button" onClick={() => { setLoginRequired(false); onSignUpClick?.() }}
+                      className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">
+                      Create Account
+                    </button>
+                    <button type="button" onClick={() => setLoginRequired(false)}
+                      className="rounded-xl px-4 py-2 text-sm text-text-muted">
+                      Not Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
     </div>
   )
 }
+
+
 

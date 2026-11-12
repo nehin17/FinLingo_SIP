@@ -34,6 +34,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/companies/**").permitAll()
+                .requestMatchers("/api/market/**").permitAll()
                 .requestMatchers("/api/terms/**").permitAll()
                 // LearningController independently checks a valid signed JWT on every route.
                 .requestMatchers("/api/learn/**").permitAll()

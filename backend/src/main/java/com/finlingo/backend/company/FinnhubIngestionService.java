@@ -11,6 +11,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -139,6 +141,81 @@ public class FinnhubIngestionService {
         }
     }
 
+    /**
+     * Refresh only current quotes during regular US equity market hours.
+     * This deliberately avoids profile, fundamentals, news and premium candle endpoints.
+     * 30 symbols are requested once every five minutes (well below common free-tier limits).
+     */
+    @Scheduled(fixedDelay = 300000, initialDelay = 60000)
+    public void scheduledQuoteRefresh() {
+        if (apiKey == null || apiKey.isBlank()
+                || "placeholder".equalsIgnoreCase(apiKey)
+                || apiKey.startsWith("YOUR_")) {
+            System.err.println("Finnhub quote refresh skipped: configure a real FINNHUB_API_KEY");
+            return;
+        }
+
+        java.time.ZonedDateTime easternNow =
+                java.time.ZonedDateTime.now(ZoneId.of("America/New_York"));
+        DayOfWeek day = easternNow.getDayOfWeek();
+        LocalTime time = easternNow.toLocalTime();
+
+        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY
+                || time.isBefore(LocalTime.of(9, 30))
+                || !time.isBefore(LocalTime.of(16, 0))) {
+            return;
+        }
+
+        int updated = 0;
+        for (String ticker : CompanyUniverse.TICKERS.stream().sorted().toList()) {
+            try {
+                if (refreshQuoteOnly(ticker)) updated++;
+            } catch (Exception e) {
+                System.err.println("Finnhub quote refresh failed for " + ticker + ": " + e.getMessage());
+            }
+        }
+        System.out.println("Finnhub quote refresh completed: " + updated
+                + "/" + CompanyUniverse.TICKERS.size() + " quotes updated");
+    }
+
+    private boolean refreshQuoteOnly(String ticker) {
+        String symbol = ticker.toUpperCase(Locale.ROOT);
+        Company company = companyRepository.findByTickerIgnoreCase(symbol).orElse(null);
+        if (company == null) {
+            System.err.println("Finnhub quote refresh skipped; company not found: " + symbol);
+            return false;
+        }
+
+        Map<String, Object> quote = restClient.get()
+                .uri(baseUrl + "/quote?symbol=" + symbol)
+                .header("X-Finnhub-Token", apiKey)
+                .retrieve()
+                .body(Map.class);
+
+        if (quote == null) return false;
+        BigDecimal current = decimalValue(quote.get("c"));
+        if (current == null || current.compareTo(BigDecimal.ZERO) <= 0) return false;
+
+        BigDecimal previousClose = decimalValue(quote.get("pc"));
+        LocalDate today = LocalDate.now();
+        PriceHistory row = priceHistoryRepository
+                .findByCompanyTickerAndDate(symbol, today)
+                .orElseGet(PriceHistory::new);
+
+        row.setCompany(company);
+        row.setDate(today);
+        row.setOpen(decimalValue(quote.get("o")));
+        row.setHigh(decimalValue(quote.get("h")));
+        row.setLow(decimalValue(quote.get("l")));
+        row.setClose(current);
+        if (previousClose != null && previousClose.compareTo(BigDecimal.ZERO) > 0) {
+            row.setPreviousClose(previousClose);
+        }
+        row.setSource("FINNHUB");
+        row.setFetchedAt(LocalDateTime.now());
+        priceHistoryRepository.save(row);
+        return true;
+    }
     public Company ingestCompany(String ticker) {
 
         String symbol = ticker.toUpperCase();
@@ -315,6 +392,7 @@ public class FinnhubIngestionService {
             priceHistory.setHigh(highPrice);
             priceHistory.setLow(lowPrice);
             priceHistory.setClose(currentPrice);
+            priceHistory.setPreviousClose(previousClose);
             priceHistory.setSource("FINNHUB");
             priceHistory.setFetchedAt(
                     LocalDateTime.now()

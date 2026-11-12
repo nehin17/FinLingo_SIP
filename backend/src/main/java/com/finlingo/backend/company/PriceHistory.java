@@ -26,6 +26,8 @@ public class PriceHistory {
     private BigDecimal high;
     private BigDecimal low;
     private BigDecimal close;
+    @Column(name = "previous_close", precision = 19, scale = 4)
+    private BigDecimal previousClose;
     private Long volume;
 
     @Column(length = 50)
@@ -47,6 +49,8 @@ public class PriceHistory {
     public void setLow(BigDecimal low) { this.low = low; }
     public BigDecimal getClose() { return close; }
     public void setClose(BigDecimal close) { this.close = close; }
+    public BigDecimal getPreviousClose() { return previousClose; }
+    public void setPreviousClose(BigDecimal previousClose) { this.previousClose = previousClose; }
     public Long getVolume() { return volume; }
     public void setVolume(Long volume) { this.volume = volume; }
     public String getSource() { return source; }

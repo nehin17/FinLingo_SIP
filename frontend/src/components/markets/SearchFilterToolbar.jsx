@@ -9,11 +9,11 @@ const FILTERS = [
   { value: 'us', label: 'US Market' },
   { value: 'india', label: 'Indian Market' },
   { value: 'technology', label: 'Technology' },
-  { value: 'ai-semiconductors', label: 'AI & Semiconductors' },
-  { value: 'ecommerce', label: 'E-Commerce' },
-  { value: 'financials', label: 'Financials' },
+  { value: 'semiconductors', label: 'Semiconductors' },
+  { value: 'financial services', label: 'Financial Services' },
+  { value: 'banking', label: 'Banking' },
   { value: 'energy', label: 'Energy' },
-  { value: 'consumer', label: 'Consumer' },
+  { value: 'retail', label: 'Retail' },
 ];
 
 const SORT_OPTIONS = [

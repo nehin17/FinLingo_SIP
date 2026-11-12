@@ -80,19 +80,14 @@ public class CompanyResearchService {
             // Calculate % change from previous close
             // -----------------------------------------
 
-            if (history.size() >= 2) {
+            BigDecimal previousClose = latest.getPreviousClose();
+            if (previousClose == null && history.size() >= 2) {
+                previousClose = history.get(history.size() - 2).getClose();
+            }
 
-                PriceHistory previous =
-                        history.get(history.size() - 2);
-
-                BigDecimal previousClose =
-                        previous.getClose();
-
-                if (price != null
-                        && previousClose != null
-                        && previousClose.compareTo(
-                                BigDecimal.ZERO
-                        ) != 0) {
+            if (price != null
+                    && previousClose != null
+                    && previousClose.compareTo(BigDecimal.ZERO) != 0) {
 
                     change = price
                             .subtract(previousClose)
@@ -113,7 +108,6 @@ public class CompanyResearchService {
                             change.compareTo(
                                     BigDecimal.ZERO
                             ) >= 0;
-                }
             }
         }
 
