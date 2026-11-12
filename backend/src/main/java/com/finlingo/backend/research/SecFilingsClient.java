@@ -1,4 +1,4 @@
-﻿package com.finlingo.backend.research;
+package com.finlingo.backend.research;
 
 import com.finlingo.backend.company.CompanyUniverse;
 import org.springframework.beans.factory.annotation.Value;
